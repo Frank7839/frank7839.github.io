@@ -11,6 +11,8 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Frankie Studio · Websites, AI ads and reels</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js">
+<link rel="preload" as="script" href="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400;62..125,500;62..125,700;62..125,800&family=Big+Shoulders+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -160,10 +162,13 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .stage>svg{position:absolute;inset:0;width:100%;height:100%}
 .stage>svg[hidden],.rot[hidden]{display:none}
 .stage .gl{position:absolute;inset:0}
-.stage .gl canvas{width:100%!important;height:100%!important;display:block;touch-action:pan-y}
+.stage .gl canvas{width:100%!important;height:100%!important;display:block;touch-action:pan-y;opacity:0;transition:opacity .7s ease}
+.stage.is3d .gl canvas{opacity:1}
+@media (prefers-reduced-motion:reduce){.stage .gl canvas{transition:none}}
 .sun3d{display:none;position:absolute;width:46%;aspect-ratio:1;border-radius:50%;background:var(--mustard);left:50%;top:2%;transform:translateX(-50%);box-shadow:5px 4px 0 rgba(214,69,47,.55)}
 .stage.is3d .sun3d{display:block}
-.pins3d{position:absolute;inset:0;pointer-events:none}
+.pins3d{position:absolute;inset:0;pointer-events:none;display:none}
+.stage.is3d .pins3d{display:block}
 .pins3d button{position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:0;background:var(--cream);color:var(--navy-deep);font:500 11px var(--f-mono);cursor:pointer;pointer-events:auto;box-shadow:0 2px 0 rgba(19,31,56,.5)}
 .pins3d button[aria-pressed="true"]{background:var(--mustard)}
 .rot{position:absolute;right:0;bottom:4px;display:flex;gap:6px}
@@ -472,7 +477,7 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
   const target=new THREE.Vector3(0,.7,0);cam.lookAt(target);
   scene.add(new THREE.HemisphereLight(0xfaf5ea,0x1b2a4a,.85));
   const sun=new THREE.DirectionalLight(0xffe6bf,1.15);sun.position.set(5,10,2.5);sun.castShadow=true;
-  Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:1,far:30});sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0006;scene.add(sun);
+  Object.assign(sun.shadow.camera,{left:-6,right:6,top:6,bottom:-6,near:1,far:30});sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-.0004;sun.shadow.normalBias=.03;scene.add(sun);
   const slab=new THREE.Mesh(new THREE.BoxGeometry(8.3,.45,8.3),new THREE.MeshStandardMaterial({color:0x1f2e52,roughness:.9}));slab.position.y=-.226;slab.receiveShadow=true;scene.add(slab);
   const std=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
 
@@ -481,9 +486,12 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
   const C=n=>"city/"+n+".json",R=n=>"race/"+n+".json";
   async function put(url,x,y,z,sx,sy,ry){const o=(await load(url)).clone(true);o.position.set(x,y,z);o.scale.set(sx,sy||sx,sx);o.rotation.y=ry||0;return o}
 
-  const plotC=g=>g-2.5;              /* plot origin tile -> world centre */
+  const plotC=g=>g-3;                 /* plot origin tile -> world centre */
   const groups={},anchors={};
   async function build(){
+    const all=["road-intersection","road-straight","road-straight-lightposts","pavement","grass-trees","grass-trees-tall","building-small-a","building-small-b","building-small-c","building-small-d","building-garage"].map(C)
+      .concat(["vehicle-truck-red","vehicle-truck-yellow","vehicle-truck-green","vehicle-motorcycle"].map(R));
+    await Promise.all(all.map(load));
     const jobs=[];
     /* ground tiles */
     for(let i=0;i<8;i++)for(let j=0;j<8;j++){
@@ -514,8 +522,8 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
         anchors[a.id]=.5;
       }else{
         const sp=spec[a.id],s=1.5,h=.95*1.1;
-        for(let k=0;k<sp.n;k++)g.add(await put(C(sp.m),0,k*h,0,s,1.1,k%2?Math.PI/2:0));
-        let top=sp.n*h;
+        for(let k=0;k<sp.n;k++)g.add(await put(C(sp.m),0,k*(h+.012),0,s,1.1,0));
+        let top=sp.n*(h+.012);
         if(a.id==="radar"){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.5),std(0x16203a));pole.position.y=top+.25;g.add(pole);
           const dish=new THREE.Mesh(new THREE.CylinderGeometry(.32,.12,.08,24),std(0xfaf5ea));dish.position.y=top+.52;dish.rotation.z=.5;dish.castShadow=true;g.add(dish);top+=.7}
         if(a.id==="chordsmith"){const c=new THREE.Mesh(new THREE.BoxGeometry(.55,.4,.55),std(0xe8b23a));c.position.y=top+.2;c.castShadow=true;g.add(c);top+=.4}
@@ -679,12 +687,13 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
   (async()=>{
     try{await build();await traffic()}catch(e){console.warn("3D city fell back to the flat city:",e);return}
     box3.appendChild(renderer.domElement);
-    stage.classList.add("is3d");document.getElementById("city").setAttribute("hidden","");document.getElementById("rot").hidden=false;
     movers.forEach(m=>place(m,0));people.forEach(p=>placeP(p,0));
     const sg=groups[selected];frame.position.set(sg.position.x,0,sg.position.z);
     resize();new ResizeObserver(resize).observe(box3);
     new IntersectionObserver(e=>{vis=e[0].isIntersecting}).observe(stage);
     const orig=select;select=function(id){orig(id);highlight(id)};highlight(selected);
+    renderer.render(scene,cam);updatePins();
+    requestAnimationFrame(()=>{stage.classList.add("is3d");document.getElementById("rot").hidden=false;setTimeout(()=>document.getElementById("city").setAttribute("hidden",""),reduce?0:750)});
     requestAnimationFrame(tick);
   })();
 })();
