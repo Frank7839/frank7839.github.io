@@ -512,7 +512,7 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
     const tiles=await Promise.all(jobs);tiles.forEach(t=>scene.add(t));
     /* app buildings */
     const spec={
-      chordsmith:{m:"building-small-a",n:3},radar:{m:"building-small-b",n:2},darkroom:{m:"building-small-c",n:2},
+      chordsmith:{m:"building-small-a",n:3},radar:{m:"building-small-b",n:1},darkroom:{m:"building-small-c",n:1},
       anchorlist:{m:"building-small-d",n:1},truecrop:{m:"building-garage",n:1}
     };
     for(const a of APPS){
@@ -526,9 +526,11 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
         const pl=new THREE.Mesh(new THREE.PlaneGeometry(1.8,1.8),new THREE.MeshBasicMaterial({map:tx,transparent:true}));pl.rotation.x=-Math.PI/2;pl.position.y=.07;g.add(pl);
         anchors[a.id]=.5;
       }else{
-        const sp=spec[a.id],s=1.5,h=.95*1.1;
-        for(let k=0;k<sp.n;k++)g.add(await put(C(sp.m),0,k*(h+.012),0,s,1.1,0));
-        let top=sp.n*(h+.012);
+        /* stack floors using each model's real height; lift .004 off the pavement so faces never share a plane */
+        const sp=spec[a.id],s=1.5;let y=.004;
+        for(let k=0;k<sp.n;k++){const f=await put(C(sp.m),0,y,0,s,1.1,0);g.add(f);
+          const bb=new THREE.Box3().setFromObject(f);y+=(bb.max.y-bb.min.y)+.012}
+        let top=y;
         if(a.id==="radar"){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.5),std(0x16203a));pole.position.y=top+.25;g.add(pole);
           const dish=new THREE.Mesh(new THREE.CylinderGeometry(.32,.12,.08,24),std(0xfaf5ea));dish.position.y=top+.52;dish.rotation.z=.5;dish.castShadow=true;g.add(dish);top+=.7}
         if(a.id==="chordsmith"){const c=new THREE.Mesh(new THREE.BoxGeometry(.55,.4,.55),std(0xe8b23a));c.position.y=top+.2;c.castShadow=true;g.add(c);top+=.4}
