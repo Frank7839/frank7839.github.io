@@ -166,7 +166,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .stage.is3d .gl canvas{opacity:1}
 @media (prefers-reduced-motion:reduce){.stage .gl canvas{transition:none}}
 .sun3d{display:none;position:absolute;width:46%;aspect-ratio:1;border-radius:50%;background:var(--mustard);left:50%;top:2%;transform:translateX(-50%);box-shadow:5px 4px 0 rgba(214,69,47,.55)}
-.stage.is3d .sun3d{display:block}
+.stage.is3d .sun3d,.stage.loading .sun3d{display:block}
+.stage.loading>svg{visibility:hidden}
+.stage.loading::after{content:"Loading the city…";position:absolute;left:0;right:0;bottom:14%;text-align:center;font:500 .72rem var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cream);opacity:.75;animation:ld 1.4s ease-in-out infinite}
+@keyframes ld{50%{opacity:.35}}
 .pins3d{position:absolute;inset:0;pointer-events:none;display:none}
 .stage.is3d .pins3d{display:block}
 .pins3d button{position:absolute;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;border:0;background:var(--cream);color:var(--navy-deep);font:500 11px var(--f-mono);cursor:pointer;pointer-events:auto;box-shadow:0 2px 0 rgba(19,31,56,.5)}
@@ -201,7 +204,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
         </div>
       </div>
       <div class="hero-city city">
-        <div class="stage" id="stage">
+        <div class="stage loading" id="stage">
           <div class="sun3d" aria-hidden="true"></div>
           <div class="gl" id="gl" aria-hidden="true"></div>
           <div class="pins3d" id="pins3d"></div>
@@ -464,10 +467,12 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
 <script>
 /* ---------- 3D city (Kenney CC0 models, repainted) — the flat city above stays as the fallback ---------- */
 (function(){
-  if(!window.THREE||!THREE.GLTFLoader)return;
+  const stageEl=document.getElementById("stage"),showFlat=()=>stageEl.classList.remove("loading");
+  const flatTimer=setTimeout(showFlat,9000);
+  if(!window.THREE||!THREE.GLTFLoader){showFlat();return}
   const stage=document.getElementById("stage"),box3=document.getElementById("gl"),pinsBox=document.getElementById("pins3d");
   let renderer;
-  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});if(!renderer.getContext())return}catch(e){return}
+  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});if(!renderer.getContext()){showFlat();return}}catch(e){showFlat();return}
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches,coarse=matchMedia("(pointer: coarse)").matches;
   renderer.outputEncoding=THREE.sRGBEncoding;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
@@ -685,7 +690,7 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
     requestAnimationFrame(tick);
   }
   (async()=>{
-    try{await build();await traffic()}catch(e){console.warn("3D city fell back to the flat city:",e);return}
+    try{await build();await traffic()}catch(e){console.warn("3D city fell back to the flat city:",e);showFlat();return}
     box3.appendChild(renderer.domElement);
     movers.forEach(m=>place(m,0));people.forEach(p=>placeP(p,0));
     const sg=groups[selected];frame.position.set(sg.position.x,0,sg.position.z);
@@ -693,7 +698,8 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
     new IntersectionObserver(e=>{vis=e[0].isIntersecting}).observe(stage);
     const orig=select;select=function(id){orig(id);highlight(id)};highlight(selected);
     renderer.render(scene,cam);updatePins();
-    requestAnimationFrame(()=>{stage.classList.add("is3d");document.getElementById("rot").hidden=false;setTimeout(()=>document.getElementById("city").setAttribute("hidden",""),reduce?0:750)});
+    clearTimeout(flatTimer);document.getElementById("city").setAttribute("hidden","");
+    requestAnimationFrame(()=>{stage.classList.remove("loading");stage.classList.add("is3d");document.getElementById("rot").hidden=false});
     requestAnimationFrame(tick);
   })();
 })();
