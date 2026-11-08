@@ -4,10 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Frankie designs and builds websites, AI-made ads and reels for brands and creators. Based in Hyderabad.">
-<meta property="og:title" content="Frankie Studio">
-<meta property="og:description" content="Websites, AI ads and reels that get seen. Based in Hyderabad.">
-<meta property="og:type" content="website">
+<link rel="canonical" href="https://frank7839.github.io/">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#1b2a4a">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://frank7839.github.io/">
+<meta property="og:title" content="Frankie Studio · Websites, AI ads and reels">
+<meta property="og:description" content="Websites, AI ads and reels that get seen. Based in Hyderabad.">
+<meta property="og:image" content="https://frank7839.github.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://frank7839.github.io/og.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Frankie Studio · Websites, AI ads and reels</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -153,6 +162,20 @@ h2{font-weight:800;font-variation-settings:"wdth" 115;font-size:var(--s5);line-h
 .row .v{font-weight:700;font-size:var(--s3);user-select:all;overflow-wrap:anywhere}
 .row button{font:500 .75rem var(--f-mono);background:var(--ink);color:var(--paper);border:0;padding:8px 14px;cursor:pointer}
 .row button:hover{background:var(--red)}
+.row .acts{display:flex;gap:8px}
+.row a.chat{font:500 .75rem var(--f-mono);background:var(--mustard);color:var(--navy-deep);padding:8px 14px;text-decoration:none}
+.row a.chat:hover{background:var(--red);color:var(--paper)}
+@media (max-width:460px){.row .acts{grid-column:1/-1}}
+/* about */
+.about{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:640px){.about{grid-template-columns:1fr}}
+.portrait{position:relative;max-width:240px;margin:0}
+.portrait::before{content:"";position:absolute;inset:12px -12px -12px 12px;background:var(--mustard)}
+.portrait img{position:relative;display:block;width:100%;height:auto;border:2px solid var(--ink);aspect-ratio:4/5;object-fit:cover}
+.portrait figcaption{position:relative;font-family:var(--f-mono);font-size:.7rem;color:var(--slate);margin-top:20px}
+.about p{margin:0 0 14px;max-width:36em;font-size:var(--s3);line-height:1.5}
+.facts{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.facts li{font-family:var(--f-mono);font-size:.75rem;border:1.5px solid var(--ink);padding:5px 10px}
 @media (max-width:460px){.row{grid-template-columns:minmax(0,1fr) auto}.row .k{grid-column:1/-1}}
 .fine{font-family:var(--f-mono);font-size:.75rem;color:var(--slate);margin-top:14px}
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:28px;font-family:var(--f-mono);font-size:.75rem}
@@ -185,6 +208,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <ul>
       <li><a href="#services">Services</a></li>
       <li><a href="#work">Work</a></li>
+      <li><a href="#about">About</a></li>
       <li><a href="#process">Process</a></li>
       <li><a href="#contact">Get a quote</a></li>
     </ul>
@@ -268,6 +292,26 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     </div>
   </section>
 
+  <section class="sec" id="about" style="padding-top:0">
+    <div class="wrap grid12">
+      <div class="sec-head">
+        <div class="label">About</div>
+        <h2>Hi, I'm Frankie.</h2>
+        <p>The one person behind every project here.</p>
+      </div>
+      <div class="sec-body">
+        <div class="about">
+          <figure class="portrait"><img src="frankie.jpg" alt="Frankie, smiling, standing among papaya and mango trees" width="480" height="600" loading="lazy"></figure>
+          <div>
+            <p>By day I'm a senior technical writer, turning complicated products into instructions people can follow. That habit runs through everything I make: clear structure, plain words, and handover notes so you're never stuck.</p>
+            <p>The rest of the time I design and build websites, AI-made ads and reels. Five of my own apps are live and in use, from a songwriting studio to a photo-contest tracker.</p>
+            <ul class="facts"><li>Websites · ads · reels</li><li>English · Hindi · Telugu</li><li>Documented handover</li><li>Shoots on Fujifilm</li></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="band process" id="process">
     <div class="wrap">
       <div class="label">Process</div>
@@ -302,12 +346,12 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <script>
 /* ---------- content ---------- */
-const CONTACT=[{k:"WhatsApp",v:"+91 80193 11553"}];
+const CONTACT=[{k:"WhatsApp",v:"+91 80193 11553",href:"https://wa.me/918019311553"}];
 const APPS=[
  {id:"chordsmith",name:"Chordsmith",tag:"Web app · Musicians",desc:"A free songwriting studio for chords, progressions, lyrics and instrument shapes. Songs in English, Hindi or Telugu, and it installs like a phone app.",url:"https://frank7839.github.io/chordsmith",act:"Open app",feat:true,gx:0,gy:0,h:4.4,c:["#e8b23a","#c8921f","#f6d27a"]},
  {id:"radar",name:"Photo Contest Radar",tag:"Tracker · Photographers",desc:"Finds open photography competitions worldwide, with a country filter and each contest's rules in a fold-out panel.",url:"https://github.com/Frank7839/photo-contest-radar",act:"View on GitHub",gx:3,gy:0,h:3.2,c:["#d6452f","#a9321f","#ee7a62"]},
  {id:"darkroom",name:"Caption Darkroom",tag:"AI tool · Creators",desc:"Add a photo or video and get captions, hashtags, keywords and the best time to post on each platform.",url:"https://caption-darkroom.franklin160371.workers.dev",act:"Open app",gx:6,gy:0,h:2.6,c:["#3e5486","#2b3c66","#6e86b8"]},
- {id:"anchorlist",name:"Anchorlist",tag:"Music · Listeners",desc:"Paste one song and get a playlist that stays in its genre and language, ready for Spotify or YouTube Music.",url:"",act:"Link coming soon",gx:0,gy:3,h:2.2,c:["#e9dcc0","#c9b78f","#faf2de"]},
+ {id:"anchorlist",name:"Anchorlist",tag:"Music · Listeners",desc:"Paste one song and get a playlist that stays in its genre and language, ready for Spotify or YouTube Music.",url:"https://anchorlist.franklin160371.workers.dev",act:"Open app",gx:0,gy:3,h:2.2,c:["#e9dcc0","#c9b78f","#faf2de"]},
  {id:"truecrop",name:"Truecrop",tag:"Image tool · Photographers",desc:"Crops and resizes images for social posts and contest entries without losing quality.",url:"",act:"Demo on request",gx:6,gy:3,h:1.8,c:["#e8b23a","#c8921f","#f6d27a"]},
  {id:"you",name:"Your project",tag:"Open plot",desc:"This plot is free. Tell me what you want built and it could stand here next.",url:"https://forms.gle/uVM62EsfMTJfGq5U7",act:"Fill in the brief",gx:3,gy:6,h:0,c:[]}
 ];
@@ -456,7 +500,7 @@ APPS.filter(a=>a.id!=="you").forEach(a=>{
 
 /* ---------- contact ---------- */
 const rows=document.getElementById("rows");
-CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";r.innerHTML=`<span class="k"></span><span class="v"></span><button type="button" id="copy${i}">Copy</button>`;
+CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";r.innerHTML=`<span class="k"></span><span class="v"></span><span class="acts">${c.href?`<a class="chat" href="${c.href}" target="_blank" rel="noopener">Chat ↗</a>`:""}<button type="button" id="copy${i}">Copy</button></span>`;
   r.querySelector(".k").textContent=c.k;const v=r.querySelector(".v");v.textContent=c.v;const b=r.querySelector("button");
   b.addEventListener("click",()=>{const ok=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500)},sel=()=>{const s=getSelection(),g=document.createRange();g.selectNodeContents(v);s.removeAllRanges();s.addRange(g);b.textContent="Selected";setTimeout(()=>b.textContent="Copy",1500)};try{navigator.clipboard.writeText(c.v).then(ok,sel)}catch(e){sel()}});
   rows.append(r)});
