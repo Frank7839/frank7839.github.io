@@ -525,20 +525,77 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
     }
     {const ch=charminar();ch.scale.setScalar(1.12);scene.add(ch)}
   }
+  function stoneTex(base,rep){
+    const cv=document.createElement("canvas");cv.width=cv.height=256;const k=cv.getContext("2d");
+    k.fillStyle=base;k.fillRect(0,0,256,256);
+    for(let i=0;i<2200;i++){const v=Math.random();k.fillStyle=v<.5?"rgba(90,70,40,"+(Math.random()*.08)+")":"rgba(255,250,235,"+(Math.random()*.12)+")";k.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*3,1+Math.random()*2)}
+    k.strokeStyle="rgba(90,70,40,.16)";k.lineWidth=1.5;
+    for(let y=0;y<256;y+=32){k.beginPath();k.moveTo(0,y);k.lineTo(256,y);k.stroke();for(let x=(y/32)%2?32:0;x<256;x+=64){k.beginPath();k.moveTo(x,y);k.lineTo(x,y+32);k.stroke()}}
+    const g=k.createLinearGradient(0,0,0,256);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(80,60,30,.10)");k.fillStyle=g;k.fillRect(0,0,256,256);
+    const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep[0],rep[1]);return t;
+  }
   function charminar(){
-    const g=new THREE.Group(),stone=std(0xe9dcc0),dark=std(0x7a6744),light=std(0xfaf2de);
-    const base=new THREE.Mesh(new THREE.BoxGeometry(1.45,.8,1.45),stone);base.position.y=.4;g.add(base);
-    const up=new THREE.Mesh(new THREE.BoxGeometry(1.0,.32,1.0),stone);up.position.y=.96;g.add(up);
-    const sh=new THREE.Shape();sh.moveTo(-.24,0);sh.lineTo(-.24,.36);sh.absarc(0,.36,.24,Math.PI,0,true);sh.lineTo(.24,0);sh.lineTo(-.24,0);
-    const ag=new THREE.ShapeGeometry(sh,12);
-    [[0,.726,0],[Math.PI/2,.726,0],[Math.PI,.726,0],[-Math.PI/2,.726,0]].forEach(([r,d])=>{const m=new THREE.Mesh(ag,dark);m.rotation.y=r;m.position.set(Math.sin(r)*d,.0,Math.cos(r)*d);g.add(m)});
+    const g=new THREE.Group(),flat=true;
+    const M=(c,map)=>new THREE.MeshStandardMaterial({color:c,map:map||null,roughness:.85,flatShading:flat});
+    const wall=M(0xffffff,stoneTex("#eadfc6",[2,2])),wallS=M(0xffffff,stoneTex("#e4d6b8",[1,3])),
+          trim=M(0xf8f1de),ledge=M(0xd2bf95),recess=M(0x4f3f2a),recess2=M(0x6b573a),dome=M(0xf3ead8),gold=M(0xe8b23a),
+          face=M(0xfaf5ea),ink=M(0x16203a);
+    const add=(geo,mat,x,y,z,ry)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);if(ry)m.rotation.y=ry;g.add(m);return m};
+    /* pointed (ogee-style) arch outline */
+    function archShape(w,spring,peak){const s=new THREE.Shape(),h=w/2;s.moveTo(-h,0);s.lineTo(-h,spring);
+      s.quadraticCurveTo(-h,spring+(peak-spring)*.75,0,peak);s.quadraticCurveTo(h,spring+(peak-spring)*.75,h,spring);s.lineTo(h,0);s.lineTo(-h,0);return s}
+    function archFrame(w,spring,peak,t){const o=archShape(w+t*2,spring+t*.5,peak+t);const i=archShape(w,spring,peak);o.holes.push(new THREE.Path(i.getPoints(16)));return o}
+    /* put a flat piece on all four faces of a square of half-size d */
+    function onFaces(make,d,y,along){for(let f=0;f<4;f++){const r=f*Math.PI/2;const m=make();m.rotation.y=r;
+      const off=along||0;m.position.set(Math.sin(r)*d+Math.cos(r)*off,y,Math.cos(r)*d-Math.sin(r)*off);g.add(m)}}
+    const B=.7,BH=1.05;
+    add(new THREE.BoxGeometry(B*2,BH,B*2),wall,0,BH/2,0);
+    add(new THREE.BoxGeometry(B*2+.1,.06,B*2+.1),ledge,0,.03,0);                 /* plinth */
+    /* grand arches */
+    const big=new THREE.ShapeGeometry(archShape(.56,.42,.8),16),bigF=new THREE.ExtrudeGeometry(archFrame(.56,.42,.8,.05),{depth:.04,bevelEnabled:false,curveSegments:16});
+    onFaces(()=>new THREE.Mesh(big,recess),B+.002,0);
+    onFaces(()=>new THREE.Mesh(bigF,trim),B-.01,0);
+    /* clocks above the arches */
+    const clk=new THREE.CylinderGeometry(.075,.075,.03,20),rim=new THREE.TorusGeometry(.078,.012,6,20),hand=new THREE.BoxGeometry(.008,.05,.006);
+    for(let f=0;f<4;f++){const r=f*Math.PI/2,sx=Math.sin(r),sz=Math.cos(r);
+      const c=add(clk,face,sx*(B+.012),.93,sz*(B+.012));c.rotation.order='YXZ';c.rotation.set(Math.PI/2,r,0);
+      const ri=add(rim,ink,sx*(B+.02),.93,sz*(B+.02));ri.rotation.y=r;
+      const h1=add(hand,ink,sx*(B+.03),.945,sz*(B+.03),r);const h2=add(hand,ink,sx*(B+.03),.93,sz*(B+.03),r);h2.rotation.z=Math.PI/2.6;h2.position.y=.935}
+    add(new THREE.BoxGeometry(B*2+.12,.06,B*2+.12),ledge,0,BH+.03,0);           /* cornice */
+    /* first gallery: row of small arches */
+    const G1=.62,G1H=.3,g1y=BH+.06;
+    add(new THREE.BoxGeometry(G1*2,G1H,G1*2),wallS,0,g1y+G1H/2,0);
+    const sm=new THREE.ShapeGeometry(archShape(.13,.1,.22),10),smF=new THREE.ExtrudeGeometry(archFrame(.13,.1,.22,.022),{depth:.02,bevelEnabled:false,curveSegments:10});
+    for(const off of[-.44,-.22,0,.22,.44]){onFaces(()=>new THREE.Mesh(sm,recess2),G1+.002,g1y+.04,off);onFaces(()=>new THREE.Mesh(smF,trim),G1-.004,g1y+.04,off)}
+    add(new THREE.BoxGeometry(G1*2+.1,.05,G1*2+.1),ledge,0,g1y+G1H+.025,0);
+    /* second gallery */
+    const G2=.5,G2H=.24,g2y=g1y+G1H+.05;
+    add(new THREE.BoxGeometry(G2*2,G2H,G2*2),wallS,0,g2y+G2H/2,0);
+    const sm2=new THREE.ShapeGeometry(archShape(.1,.08,.17),10);
+    for(const off of[-.3,-.1,.1,.3])onFaces(()=>new THREE.Mesh(sm2,recess2),G2+.002,g2y+.03,off);
+    add(new THREE.BoxGeometry(G2*2+.08,.04,G2*2+.08),ledge,0,g2y+G2H+.02,0);
+    /* parapet merlons */
+    const mer=new THREE.BoxGeometry(.06,.07,.06);const py=g2y+G2H+.075;
+    for(let i=0;i<9;i++){const t=-G2+.03+i*(G2*2-.06)/8;[[t,G2],[t,-G2],[G2,t],[-G2,t]].forEach(([x,z])=>add(mer,trim,x,py,z))}
+    /* minarets */
+    const shaft1=new THREE.CylinderGeometry(.13,.15,BH+.06,10),shaft2=new THREE.CylinderGeometry(.105,.12,.62,10),shaft3=new THREE.CylinderGeometry(.085,.095,.32,10);
+    const balc=new THREE.CylinderGeometry(.2,.2,.045,12),corb=new THREE.CylinderGeometry(.19,.11,.09,12),rail=new THREE.CylinderGeometry(.2,.2,.05,12,1,true);
+    const onion=new THREE.LatheGeometry([[0,0],[.1,0],[.135,.05],[.135,.1],[.1,.16],[.05,.21],[.015,.25],[0,.27]].map(p=>new THREE.Vector2(p[0],p[1])),12);
+    const petal=new THREE.CylinderGeometry(.12,.1,.04,12),fin=new THREE.ConeGeometry(.018,.16,6),ball=new THREE.SphereGeometry(.025,8,6);
     for(const sx of[-1,1])for(const sz of[-1,1]){
-      const x=sx*.66,z=sz*.66;
-      const t=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,2.05,12),stone);t.position.set(x,1.025,z);g.add(t);
-      for(const y of[1.2,1.65]){const b=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.05,12),light);b.position.set(x,y,z);g.add(b)}
-      const d=new THREE.Mesh(new THREE.SphereGeometry(.13,14,10),light);d.position.set(x,2.12,z);g.add(d);
-      const sp=new THREE.Mesh(new THREE.ConeGeometry(.03,.2,8),stone);sp.position.set(x,2.33,z);g.add(sp);
+      const x=sx*B,z=sz*B;
+      add(shaft1,wallS,x,(BH+.06)/2,z);
+      for(const [y,h] of[[BH+.06,0],[BH+.06+.62,1]]){
+        add(corb,ledge,x,y-.045,z);add(balc,trim,x,y,z);
+        const r=add(rail,trim,x,y+.05,z);r.material=trim;
+      }
+      add(shaft2,wallS,x,BH+.06+.31,z);
+      add(shaft3,wallS,x,BH+.06+.62+.16,z);
+      const top=BH+.06+.62+.32;
+      add(petal,ledge,x,top+.02,z);add(onion,dome,x,top+.04,z);add(fin,gold,x,top+.38,z);add(ball,gold,x,top+.32,z);
     }
+    /* small central dome on the roof */
+    const cd=add(onion,dome,0,py-.02,0);cd.scale.setScalar(1.2);
     g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
     return g;
   }
