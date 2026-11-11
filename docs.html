@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Frankie Studio · App Docs</title>
+<meta name="description" content="How each of Frankie's five live apps works: what it does, how to use it, what happens behind the scenes, and where your data goes.">
+<meta name="theme-color" content="#1b2a4a">
+<link rel="canonical" href="https://frank7839.github.io/docs.html">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --navy:#1b2a4a;--navy2:#24365e;--paper:#f4eddd;--card:#fffaf0;--ink:#1b2a4a;--muted:#5d6680;
+  --mustard:#e0a526;--red:#d2452f;--teal:#2f7d6d;--line:#d9cdb3;--r:14px;
+  --sans:"Archivo",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:76px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;border-bottom:4px solid var(--mustard)}
+.top .in{max-width:1180px;margin:auto;display:flex;align-items:center;gap:14px;padding:12px 20px}
+.brand{font-weight:800;letter-spacing:.02em;text-decoration:none;display:flex;align-items:center;gap:10px}
+.sun{width:22px;height:22px;border-radius:50%;background:var(--mustard);box-shadow:0 0 0 4px rgba(224,165,38,.25)}
+.top nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.top nav a{font:500 13px var(--mono);text-decoration:none;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.25)}
+.top nav a:hover{background:rgba(255,255,255,.1)}
+.top nav a.cta{background:var(--mustard);color:var(--navy);border-color:var(--mustard)}
+
+/* Hero */
+.hero{background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.hero .in{max-width:1180px;margin:auto;padding:56px 20px 64px;position:relative;z-index:1}
+.kicker{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mustard)}
+.hero h1{font-size:clamp(34px,6vw,64px);line-height:1.02;margin:12px 0 16px;font-weight:800;max-width:14ch}
+.hero p{max-width:60ch;color:#d4dbea;margin:0 0 22px}
+.hero .grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:32px 32px}
+.hero .stamp{position:absolute;right:-40px;bottom:-60px;width:280px;height:280px;border-radius:50%;background:var(--red);opacity:.9}
+.hero .stamp2{position:absolute;right:120px;bottom:40px;width:90px;height:90px;border-radius:50%;background:var(--mustard)}
+.search{display:flex;gap:10px;max-width:520px}
+.search input{flex:1;font:15px var(--sans);padding:12px 14px;border-radius:10px;border:2px solid transparent;background:#fff;color:var(--ink)}
+.search input:focus{border-color:var(--mustard);outline:none}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:18px;font:13px var(--mono);color:#c6cee0}
+.legend span{display:flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+main{max-width:1180px;margin:auto;padding:0 20px 80px}
+section{margin-top:56px}
+h2{font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin:0 0 6px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 22px;max-width:70ch}
+
+/* Overview cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{background:var(--card);border:2px solid var(--navy);border-radius:var(--r);padding:18px;text-decoration:none;display:flex;flex-direction:column;gap:8px;box-shadow:5px 5px 0 var(--navy);transition:transform .15s,box-shadow .15s}
+.card:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--navy)}
+.card .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#fff}
+.card h3{margin:4px 0 0;font-size:19px}
+.card p{margin:0;color:var(--muted);font-size:14px;line-height:1.45}
+.card .tags{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap;padding-top:6px}
+.tag{font:500 11px var(--mono);padding:3px 8px;border-radius:999px;background:#efe4cc;color:var(--navy)}
+
+/* Comparison */
+.tablewrap{overflow-x:auto;border:2px solid var(--navy);border-radius:var(--r);background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{padding:12px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{background:var(--navy);color:#fff;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+tbody th{font-weight:700;white-space:nowrap}
+tr:last-child td,tr:last-child th{border-bottom:0}
+.yes{color:var(--teal);font-weight:600}.no{color:var(--muted)}
+
+/* Project sections */
+.proj{background:var(--card);border:2px solid var(--navy);border-radius:var(--r);overflow:hidden;box-shadow:6px 6px 0 var(--navy)}
+.proj+.proj{margin-top:34px}
+.phead{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:22px;color:#fff}
+.phead .ic{width:56px;height:56px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:28px}
+.phead h3{margin:0;font-size:clamp(22px,3vw,30px);line-height:1.1}
+.phead .tl{margin:4px 0 0;opacity:.9;font-size:15px}
+.open{font:600 14px var(--sans);text-decoration:none;background:#fff;color:var(--navy);padding:10px 16px;border-radius:10px;white-space:nowrap}
+.open:hover{background:var(--mustard)}
+.facts{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid var(--navy);background:#fbf4e4}
+.fact{flex:1 1 160px;padding:12px 18px;border-right:1px solid var(--line)}
+.fact:last-child{border-right:0}
+.fact b{display:block;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fact span{font-weight:600;font-size:14px}
+.tabs{display:flex;gap:4px;padding:12px 14px 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14px;border-bottom:3px solid transparent;white-space:nowrap;color:var(--muted)}
+.tabs button[aria-selected="true"]{color:var(--navy);border-color:var(--mustard)}
+.panel{padding:22px}
+.panel[hidden]{display:none}
+.panel h4{margin:0 0 10px;font-size:17px}
+.panel p{margin:0 0 14px;max-width:75ch}
+.panel ul{margin:0 0 14px;padding-left:20px}
+.panel li{margin:4px 0}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.box{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.box h5{margin:0 0 8px;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Steps */
+ol.steps{list-style:none;padding:0;margin:0;counter-reset:s;display:grid;gap:10px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+ol.steps li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font:600 14px var(--mono)}
+ol.steps li b{display:block}
+
+/* Flow diagram */
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:0;margin:4px 0 20px}
+.node{flex:1 1 150px;min-width:140px;background:#fff;border:2px solid var(--navy);border-radius:12px;padding:12px;position:relative;margin:6px 18px 6px 0}
+.node:not(:last-child)::after{content:"→";position:absolute;right:-17px;top:50%;transform:translateY(-50%);font:700 16px var(--mono);color:var(--red)}
+.node .where{font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;display:inline-block;padding:2px 7px;border-radius:999px;margin-bottom:6px;color:#fff}
+.w-device{background:var(--teal)}.w-cloud{background:var(--navy2)}.w-ai{background:var(--red)}.w-you{background:var(--mustard);color:var(--navy)!important}.w-ext{background:#7a5c9e}
+.node b{display:block;font-size:14px;line-height:1.3}
+.node small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:4px}
+
+.files{width:100%;min-width:0;font-size:13.5px}
+.files td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--red)}
+.note{border-left:4px solid var(--mustard);background:#fff6df;padding:12px 14px;border-radius:0 10px 10px 0;margin:0 0 14px;font-size:14.5px}
+.warn{border-left-color:var(--red);background:#fde9e4}
+code{font:13px var(--mono);background:#efe4cc;padding:1px 6px;border-radius:5px}
+
+/* Glossary */
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.gloss div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.gloss b{display:block;margin-bottom:4px}
+.gloss p{margin:0;color:var(--muted);font-size:14px}
+
+.empty{display:none;padding:30px;text-align:center;border:2px dashed var(--line);border-radius:var(--r);color:var(--muted)}
+footer{background:var(--navy);color:#c6cee0;font-size:14px}
+footer .in{max-width:1180px;margin:auto;padding:28px 20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+footer a{color:var(--mustard)}
+.toTop{position:fixed;right:16px;bottom:16px;width:44px;height:44px;border-radius:50%;border:2px solid var(--navy);background:var(--mustard);font-weight:800;display:none;z-index:30}
+
+@media (max-width:720px){
+  .top nav a:not(.cta){display:none}
+  .phead{grid-template-columns:auto 1fr}
+  .phead .open{grid-column:1/-1;text-align:center}
+  .node{flex-basis:100%;margin:6px 0 18px}
+  .node:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-22px;transform:translateX(-50%)}
+  .hero .stamp{width:180px;height:180px}
+  .hero .stamp2{display:none}
+}
+@media print{
+  .top,.search,.tabs,.toTop,.hero .stamp,.hero .stamp2{display:none!important}
+  .panel[hidden]{display:block!important}
+  .proj{box-shadow:none;break-inside:avoid-page}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="in">
+    <a class="brand" href="./"><span class="sun" aria-hidden="true"></span>Frankie Studio · Docs</a>
+    <nav aria-label="Sections">
+      <a href="#apps">Apps</a>
+      <a href="#compare">Compare</a>
+      <a href="#glossary">Glossary</a>
+      <a class="cta" href="./">← Portfolio</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="stamp" aria-hidden="true"></div><div class="stamp2" aria-hidden="true"></div>
+  <div class="in">
+    <div class="kicker">Documentation · 5 live apps</div>
+    <h1>How every app works.</h1>
+    <p>For each app: what it's for, how to use it step by step, what happens behind the scenes after you tap a button, where your data goes, and its known limits. Everything here is written in plain words, with no sign-up needed.</p>
+    <div class="search" role="search">
+      <input id="q" type="search" placeholder="Search, e.g. offline, API key, lossless…" aria-label="Search the docs">
+    </div>
+    <div class="legend" aria-label="Diagram legend">
+      <span><i class="dot" style="background:var(--mustard)"></i>You</span>
+      <span><i class="dot" style="background:var(--teal)"></i>Your device</span>
+      <span><i class="dot" style="background:var(--navy2);border:1px solid #fff"></i>Cloudflare / GitHub</span>
+      <span><i class="dot" style="background:var(--red)"></i>AI model</span>
+      <span><i class="dot" style="background:#7a5c9e"></i>Outside service</span>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section id="apps">
+    <h2>The apps</h2>
+    <p class="sub">Tap a card to jump to its documentation.</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="compare">
+    <h2>At a glance</h2>
+    <p class="sub">Where each app runs, whether it uses AI, and what (if anything) leaves your device.</p>
+    <div class="tablewrap"><table id="cmp"></table></div>
+  </section>
+
+  <section id="docs">
+    <h2>App documentation</h2>
+    <p class="sub">Switch tabs inside each app to move between overview, usage, internals, privacy and limits.</p>
+    <div id="projects"></div>
+    <div class="empty" id="empty">Nothing matches that search. Try a simpler word.</div>
+  </section>
+
+  <section id="glossary">
+    <h2>Glossary</h2>
+    <p class="sub">Terms that show up across these docs.</p>
+    <div class="gloss" id="gloss"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="in">
+    <span>© Frankie · Hyderabad, India</span>
+    <span>Need something like this built? <a href="https://forms.gle/uVM62EsfMTJfGq5U7" target="_blank" rel="noopener">Get a quote ↗</a></span>
+  </div>
+</footer>
+<button class="toTop" id="toTop" aria-label="Back to top">↑</button>
+
+<script>
+const APPS=[
+{
+  id:"chordsmith",name:"Chordsmith Studio",icon:"♪",color:"#2f7d6d",
+  tagline:"A free songwriting studio for chords, progressions and lyrics.",
+  url:"https://frank7839.github.io/chordsmith/",
+  tags:["Music","Offline-friendly","No AI"],
+  facts:{"Runs on":"GitHub Pages","AI":"None","Account":"Not needed","Install":"Add to home screen"},
+  overview:`<p>Chordsmith helps you write a song from scratch. Pick a key, build a chord progression by tapping chords, write lyrics with chords placed on the right words, and play it all back. Song languages are English, Hindi and Telugu; the interface stays in English.</p>
+  <div class="cols">
+    <div class="box"><h5>Key &amp; harmony</h5><ul><li>Key picker and an interactive circle of fifths</li><li>"Chords in this key": tap to hear and add</li><li>Borrowed chords from the parallel key</li><li>Function labels: tonic, pre-dominant, dominant, borrowed</li></ul></div>
+    <div class="box"><h5>Writing</h5><ul><li>Sections such as [Verse] and [Chorus]</li><li>Inline chords on a specific word</li><li>Chord sheet view</li><li>Rhyme and syllable (meter) view</li></ul></div>
+    <div class="box"><h5>Playing</h5><ul><li>Tempo, and Pad / Pluck / Kalimba sounds</li><li>Loop a section, play in order, or play along with lyrics</li><li>Chord shapes for guitar, ukulele, mandolin, bass, kalimba and piano, with capo</li><li>Transpose</li></ul></div>
+    <div class="box"><h5>In-ear guide</h5><ul><li>Count-in of 0, 1 or 2 bars</li><li>Spoken section calls 1–2 bars early, plus optional lyric cues</li><li>Split output: guide and click on one side, music on the other</li><li>Your own voice clips, or the phone's built-in voice</li></ul></div>
+  </div>`,
+  steps:[
+    ["Pick a key","Use the key picker or tap a key on the circle of fifths."],
+    ["Build the progression","Tap chords in \"Chords in this key\". Each one plays and gets added. You can also borrow chords, load a classic, or tap \"Surprise me\"."],
+    ["Organise sections","Duplicate, delete or reorder sections (Verse, Chorus…)."],
+    ["Set the sound","Choose a tempo, a sound and a play mode."],
+    ["Write lyrics","Put section names in brackets, like [Chorus]. To land a chord on a word, type the chord in brackets inside the line."],
+    ["Check the song","Open the chord sheet and the rhyme and meter view."],
+    ["Optional: set up the in-ear guide","Pick a count-in and section calls, then load voice clips: one full recording (split automatically) or files named after sections, like chorus.mp3."],
+    ["Play","Tap Play. Sound only starts after you tap, which is a browser rule."],
+    ["Share","Copy the song chart to paste anywhere."]
+  ],
+  flow:[
+    ["you","You tap a chord or type lyrics",""],
+    ["device","App updates the song","The chord list, sections and lyric chart are recalculated in the page."],
+    ["device","Audio is synthesised","The browser's audio engine plays the chord: no sound files are downloaded."],
+    ["device","Draft saved on device","Your song stays in this browser on this phone or laptop."]
+  ],
+  under:`<p>Chordsmith is a single web page served from GitHub Pages. All music theory (keys, chord families, transposing, rhymes, syllable estimates) is calculated by code inside the page. Nothing is sent to a server, so it keeps working once loaded.</p>
+  <table class="files"><tr><td>index.html</td><td>The whole app: interface, theory engine, audio playback and in-ear guide.</td></tr><tr><td>Updates</td><td>A new <code>index.html</code> is uploaded to the <code>chordsmith</code> GitHub repo, and GitHub Pages serves it within a minute or two.</td></tr></table>`,
+  privacy:`<ul><li>Songs, drafts and loaded voice clips stay on your device.</li><li>No sign-up, no ads, no tracking.</li><li>Clearing your browser data deletes saved songs, so copy the chart if you want a backup.</li></ul>`,
+  limits:`<ul><li>Chord timing assumes every lyric line has the same length (1, 2 or 4 bars) unless you place chords inline.</li><li>Rhymes are detected by spelling, so some slant rhymes are missed.</li><li>Syllable counts are estimates.</li><li>The phone's built-in voice can be slightly late. Your own voice clips are more precise.</li></ul>`
+},
+{
+  id:"radar",name:"Photo Contest Radar",icon:"◎",color:"#d2452f",
+  tagline:"Photography contests, exhibitions and grants sorted by deadline, plus Hyderabad events.",
+  url:"https://photo-contest-radar.franklin160371.workers.dev/",
+  tags:["Photography","Offline-friendly","Installable"],
+  facts:{"Runs on":"Cloudflare Worker","AI":"Not in the app","Account":"Not needed","Install":"Yes, works offline"},
+  overview:`<p>Radar collects open photography competitions, exhibitions and grants into one list, sorted by deadline with a countdown on each card. A second tab, "Events near me", lists photowalks, workshops, exhibitions and festivals, starting with Hyderabad.</p>
+  <div class="cols">
+    <div class="box"><h5>Every contest card shows</h5><ul><li>Deadline countdown, fee, prize and eligibility</li><li>Badges: Free entry, AI images banned, rights terms (Limited licence, Rights grab, Rights unclear)</li><li>An expandable <b>Rules &amp; requirements</b> panel</li><li>A "verify" mark until checked by hand</li></ul></div>
+    <div class="box"><h5>Filters</h5><ul><li>Free only, AI banned, full rules only</li><li>Type: contests, exhibitions, grants, community challenges</li><li>Search, plus an India &amp; Hyderabad filter</li><li>City filter for events</li></ul></div>
+    <div class="box"><h5>Your shortlist</h5><ul><li>Mark contests Shortlist, Applied or Skip</li><li>Mark events Interested or Going</li><li>Saved on your device only</li></ul></div>
+  </div>`,
+  steps:[
+    ["Open Radar","The newest list downloads. After your first visit it opens offline too, showing the last list it saved."],
+    ["Filter","Turn on Free only, AI banned or a type, or search by name or theme."],
+    ["Read the rules","Expand Rules &amp; requirements on a card to see eligibility, cost, submission and editing rules, dates, prizes and rights."],
+    ["Shortlist","Mark the contests you care about. Your picks stay on this device."],
+    ["Check events","Switch to Events near me and pick your city."],
+    ["Verify and enter","Open the organiser's official page from the card and confirm the deadline and fee before paying or uploading."]
+  ],
+  flow:[
+    ["cloud","Contest list is researched","Contests and events are gathered from organisers' pages and contest directories, then summarised into one data file."],
+    ["cloud","radar.json is published","The updated file is pushed to GitHub, and Cloudflare serves it with a short cache."],
+    ["device","App downloads the list","The service worker fetches it fresh when you're online and keeps a copy for offline use."],
+    ["you","You filter and shortlist","Your marks are stored only in this browser."]
+  ],
+  under:`<table class="files">
+    <tr><td>public/index.html</td><td>The app: lists, rules panels, filters and the install button.</td></tr>
+    <tr><td>public/data/radar.json</td><td>The contest and event list. Updating this file is how new contests appear.</td></tr>
+    <tr><td>public/sw.js</td><td>Service worker that handles install and offline use and fetches the list fresh when online.</td></tr>
+    <tr><td>public/manifest.webmanifest</td><td>App name, icons and colours for installing.</td></tr>
+    <tr><td>worker/worker.js</td><td>Cloudflare Worker that serves the files, adds security headers and keeps the list's cache short.</td></tr>
+  </table>
+  <p style="margin-top:14px">Each contest in <code>radar.json</code> carries its name, organiser, deadline, link, fee and fee level, prize, eligibility, genres, a rights flag, and optionally its type, AI ban, source (official or listing) and a full or short rules summary.</p>`,
+  privacy:`<ul><li>No account and no tracking of what you shortlist.</li><li>Shortlist and event marks are saved only on your device.</li><li>The app only downloads the public list. It never uploads anything.</li></ul>`,
+  limits:`<div class="note warn">Rules are summarised automatically and can be wrong. Always confirm on the official page before paying or uploading.</div><ul><li>Some contests have full rules read from the organiser's page. Others come from directory listings and say so.</li><li>New contests appear when the list is refreshed, not in real time.</li></ul>`
+},
+{
+  id:"darkroom",name:"Caption Darkroom",icon:"✎",color:"#7a5c9e",
+  tagline:"Drop a photo or video and get captions, hashtags and where to post it.",
+  url:"https://caption-darkroom.franklin160371.workers.dev/",
+  tags:["Social media","AI","Bring your own key"],
+  facts:{"Runs on":"Cloudflare Worker","AI":"Gemini or Claude","Account":"Your own API key","Install":"Web page"},
+  overview:`<p>Caption Darkroom looks at your photo or video and writes a full post package: captions in the tone and language you choose, tiered hashtags, and suggestions for which platforms suit the shot best.</p>
+  <div class="cols">
+    <div class="box"><h5>Inputs</h5><ul><li>JPG, PNG, WebP, MP4, MOV or WebM</li><li>Tone: Auto, Casual, Witty, Poetic, Professional, Punchy</li><li>Language: English, Hinglish, Hindi, Telugu, Tamil, Spanish</li><li>Optional "Shot on", camera settings and context</li></ul></div>
+    <div class="box"><h5>Output</h5><ul><li>Caption options</li><li>Tiered hashtags, plus gear hashtags if you add your camera</li><li>Best platforms to post on</li></ul></div>
+    <div class="box"><h5>Smart details</h5><ul><li>Camera data (body, lens, aperture, shutter, ISO) auto-fills from original JPEGs</li><li>Videos are read as 4 frames across the clip</li></ul></div>
+  </div>`,
+  steps:[
+    ["Add your API key","Tap Add API key, pick Google Gemini (free tier) or Anthropic Claude, paste the key and Save. Get a free Gemini key at aistudio.google.com/apikey."],
+    ["Drop your media","Drag in a photo or video, or tap to choose one."],
+    ["Pick tone and language","Choose how the caption should sound and which language it's in."],
+    ["Add details (optional)","\"Shot on\", camera settings and context make the result more specific. Camera settings fill in automatically from original JPEGs."],
+    ["Analyze","Tap Analyze and the post package appears."],
+    ["Copy and post","Copy the caption and hashtags into your app."]
+  ],
+  flow:[
+    ["you","You add a photo or video",""],
+    ["device","Prepared on your device","Photos are resized, videos are cut into 4 frames, and camera data is read locally."],
+    ["ai","Sent to your AI provider","The request goes straight to Gemini or Claude using your own key."],
+    ["device","Package is shown","Captions, hashtags and platform picks appear on the page."]
+  ],
+  under:`<p>The site is a single web page served by a Cloudflare Worker. The heavy lifting (resizing, frame extraction, reading camera data) happens in your browser before anything is sent, which keeps requests small and fast.</p>
+  <table class="files"><tr><td>index.html</td><td>The app: upload, media prep, key settings and result display.</td></tr><tr><td>Model field</td><td>Defaults to a current Gemini Flash or Claude Sonnet model. If a provider retires a model, the site tells you, and you enter a current name.</td></tr></table>`,
+  privacy:`<ul><li>Your API key is stored only in your browser's local storage and is sent only to the AI provider you pick.</li><li>Your photo goes only to that AI provider for analysis.</li><li>The site itself stores nothing.</li></ul><div class="note">On Google's free Gemini tier, Google may review submitted content to improve its products. Use a paid key for client or private work.</div>`,
+  limits:`<ul><li>Hashtags are chosen to fit the content. The AI has no live data on what's trending today.</li><li>HEIC photos don't open in most browsers. Shoot JPEG or share as JPG first.</li><li>Photos sent through WhatsApp or downloaded from social apps usually lose camera data, so type it in.</li><li>Free-tier keys have per-minute and per-day limits.</li></ul>`
+},
+{
+  id:"anchorlist",name:"Anchorlist",icon:"⚓",color:"#9a6614",
+  tagline:"Paste one song and get a playlist that stays in its genre and language.",
+  url:"https://anchorlist.franklin160371.workers.dev/",
+  tags:["Music","AI","Installable"],
+  facts:{"Runs on":"Cloudflare Worker","AI":"Google Gemini","Account":"Not needed","Install":"Yes, plus share-to-app"},
+  overview:`<p>Radio and autoplay drift because each next song is matched to the <i>previous</i> one. Anchorlist scores every track against your <b>original seed song</b>, so a Hindustani classical seed stays Hindustani classical and a Telugu song stays Telugu.</p>
+  <div class="cols">
+    <div class="box"><h5>Seed</h5><ul><li>Paste a link from Spotify, YouTube, YouTube Music, JioSaavn or Apple Music</li><li>Or type the song name, with the artist optional</li></ul></div>
+    <div class="box"><h5>Controls</h5><ul><li>Length: 10, 20 or 30 tracks</li><li>Strictness slider (default 85, "same tradition and form")</li><li>Allow neighbouring styles, or exact match only</li><li>An optional extra rule in your own words</li></ul></div>
+    <div class="box"><h5>Results</h5><ul><li>Seed fingerprint: tradition, language, raga or style, instruments, era</li><li>Verified tracks with match scores</li><li>Copy the list or download it as .txt</li></ul></div>
+  </div>`,
+  steps:[
+    ["Add a seed","Paste a song link and tap Read link, or tap \"or type it\" and enter the name. Add the artist if you know it."],
+    ["Choose length and strictness","10, 20 or 30 tracks. Higher strictness keeps results closer to the seed's tradition and form."],
+    ["Add a rule (optional)","For example \"only pre-2000 recordings\" or \"no film songs\"."],
+    ["Build playlist","Read the seed fingerprint and check the playlist."],
+    ["Export","Copy the list or download it as .txt."],
+    ["Send to Spotify or YouTube Music","In TuneMyMusic or Soundiiz, choose \"free text\" as the source, paste the list, pick your service and sign in there."]
+  ],
+  flow:[
+    ["you","You paste a link","Or type the song."],
+    ["cloud","Worker reads the link","/api/resolve works out the song and artist from the link."],
+    ["ai","Gemini fingerprints the seed","It describes the tradition, language, form and instruments, then suggests matching tracks scored against the seed."],
+    ["ext","Deezer verifies tracks","Every suggestion is checked against the Deezer catalogue so made-up songs are dropped."],
+    ["device","Playlist is shown","Verified tracks appear with scores, ready to copy or download."]
+  ],
+  under:`<table class="files">
+    <tr><td>POST /api/resolve</td><td>Takes <code>{ url }</code> and returns the source, song and artist.</td></tr>
+    <tr><td>POST /api/build</td><td>Takes the song, optional artist, count (10/20/30), strictness (50–100) and notes, and returns the fingerprint, verified tracks, unverified suggestions and stats.</td></tr>
+    <tr><td>src/index.js</td><td>Cloudflare Worker: API routes, Gemini calls and Deezer checks.</td></tr>
+    <tr><td>public/</td><td>The app page, icons and install files.</td></tr>
+  </table>
+  <p style="margin-top:14px">Reliability details: the Worker runs in a US region (Gemini rejects some regions), races several current Gemini models in parallel and keeps the first good answer, and uses fallback searches (artist plus core raga name) for classical titles that Deezer names differently.</p>`,
+  privacy:`<ul><li>No account needed and nothing to sign in to on Anchorlist itself.</li><li>Song links and names are sent to the Worker, Gemini and Deezer only to build your list.</li><li>Signing in to Spotify or YouTube Music happens on TuneMyMusic or Soundiiz, under their own policies.</li></ul>`,
+  limits:`<ul><li>Limited to 4 playlist builds per visitor per minute. This protects the shared free AI quota, and you'll see a "wait a moment" message if you hit it.</li><li>The free Gemini quota is shared by all visitors, so busy times can slow it down.</li><li>Export to music apps goes through a third-party importer. There's no one-tap export yet.</li></ul>`
+},
+{
+  id:"truecrop",name:"Truecrop",icon:"⌗",color:"#1f4c39",
+  tagline:"Crop and resize photos without the quality tax. Nothing leaves your device.",
+  url:"https://truecrop.franklin160371.workers.dev/",
+  tags:["Photography","Offline-friendly","Installable"],
+  facts:{"Runs on":"Cloudflare Worker","AI":"None","Account":"Not needed","Install":"Yes, works offline"},
+  overview:`<p>Truecrop is built for two jobs: exact social media sizes, and photography competition entries where quality matters. It can cut a JPEG <b>without re-saving it</b>, so every pixel you keep is identical to the original.</p>
+  <div class="cols">
+    <div class="box"><h5>Social presets</h5><ul><li>Instagram 4:5 (1080×1350), 3:4 (1080×1440), square, landscape</li><li>Story / Reel 1080×1920</li><li>X 1600×900, Facebook 2048 px long edge</li></ul></div>
+    <div class="box"><h5>Competition presets</h5><ul><li>Full resolution: lossless JPEG crop</li><li>Long edge 1920, 2400, 3000, 3840 or 4000 px</li><li>File size limit from 1 to 20 MB</li><li>Remove camera info for anonymous judging</li></ul></div>
+    <div class="box"><h5>Workflow</h5><ul><li>Several photos at once, each with its own crop</li><li>Save all as .zip</li><li>Honest labels: LOSSLESS, RE-SAVED or UPSCALED</li></ul></div>
+  </div>`,
+  steps:[
+    ["Add photos","Tap Add photos, drag them in, or on Android share from your Gallery into Truecrop."],
+    ["Pick a preset","Choose Social or Competition. The crop shape locks to the preset."],
+    ["Frame the crop","Drag and resize the crop box on each photo."],
+    ["Set options","File size limit, quality, and whether to keep or remove camera info."],
+    ["Check the result label","The Result panel shows LOSSLESS, RE-SAVED or UPSCALED, with a warning if the crop is too small."],
+    ["Save","Save one photo, or Save all as .zip."]
+  ],
+  flow:[
+    ["you","You add a photo",""],
+    ["device","File opened locally","The JPEG is read in your browser and never uploaded."],
+    ["device","Lossless path","For full-resolution JPEG crops, the file is cut along its 8 or 16 px blocks with no re-encoding."],
+    ["device","Resize path","For size presets, Lanczos-3 resizing runs in a background thread, then the photo is saved once at quality 95."],
+    ["device","Saved to your device","As a single file, or as a .zip of all photos."]
+  ],
+  under:`<table class="files">
+    <tr><td>public/index.html</td><td>The app: crop interface, presets, Lanczos resizer (in a Web Worker), export and zip.</td></tr>
+    <tr><td>public/jpegll.js</td><td>The lossless JPEG engine that cuts JPEG data blocks directly, without decoding and re-saving.</td></tr>
+    <tr><td>public/sw.js</td><td>Service worker for install and offline use.</td></tr>
+    <tr><td>manifest.webmanifest</td><td>Install settings, including Android "share to Truecrop".</td></tr>
+  </table>
+  <p style="margin-top:14px">Why the snap? A JPEG is stored as 8×8 (or 16×16) pixel blocks. Cutting exactly on those block edges lets Truecrop keep the original compressed data untouched, which is what makes the crop lossless. Output is always sRGB, and orientation and size tags are corrected after cropping.</p>`,
+  privacy:`<ul><li>Photos never leave your device. There's no upload and no server processing.</li><li>No AI and no paid API.</li><li>Works offline after the first visit.</li></ul>`,
+  limits:`<ul><li>The top and left crop edges snap to the JPEG's 8 or 16 px grid in lossless mode.</li><li>Progressive JPEGs (exported by some editing apps) can't be cut losslessly. Truecrop says so and re-saves once.</li><li>Resizing always re-saves, because the pixels change.</li><li>Enlarging can't add real detail, so you get a warning.</li><li>On phones, files over about 16 MP may be slow or fail when re-saving at full size. A 26 MP resize took about 12 s in testing.</li></ul>`
+}
+];
+
+const CMP=[
+ ["Where it runs","GitHub Pages","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker"],
+ ["Uses AI",0,0,1,1,0],
+ ["Needs an API key",0,0,1,0,0],
+ ["Sends your content out","No","No","To your AI provider","Song info to Gemini and Deezer","No"],
+ ["Saves on your device","Songs, clips","Shortlist","API key","—","—"],
+ ["Installable app",1,1,0,1,1],
+ ["Works offline","Once loaded",1,0,0,1]
+];
+
+const GLOSS=[
+ ["Cloudflare Worker","A small program on Cloudflare's network that serves the app and, for some apps, runs the backend, such as talking to an AI."],
+ ["GitHub Pages","Free hosting straight from a GitHub repository. Upload a new file and the site updates."],
+ ["Service worker","A background script that lets a web app install like a phone app and open offline."],
+ ["Installable app (PWA)","A website you can add to your home screen. It opens full-screen like a normal app."],
+ ["Local storage","A small private space in your browser where an app keeps settings or drafts. It never leaves the device."],
+ ["API key","A password-like code that lets an app use an AI service on your account. Keep it private."],
+ ["Lossless crop","Cutting a JPEG without re-encoding it, so the kept pixels are identical to the original."],
+ ["Lanczos-3","A high-quality resizing method that keeps edges sharp when shrinking photos."],
+ ["Rate limit","A cap on how often something can be used, which protects a shared free quota."]
+];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const W={you:["You","w-you"],device:["Your device","w-device"],cloud:["Cloud","w-cloud"],ai:["AI","w-ai"],ext:["Outside service","w-ext"]};
+
+$("#cards").innerHTML=APPS.map(a=>`<a class="card" href="#${a.id}" data-app="${a.id}">
+  <span class="ic" style="background:${a.color}" aria-hidden="true">${a.icon}</span>
+  <h3>${esc(a.name)}</h3><p>${esc(a.tagline)}</p>
+  <span class="tags">${a.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</span></a>`).join("");
+
+const cell=v=>v===1?'<td class="yes">Yes</td>':v===0?'<td class="no">No</td>':v==="Once loaded"?`<td class="yes">${v}</td>`:`<td>${esc(v)}</td>`;
+$("#cmp").innerHTML=`<thead><tr><th></th>${APPS.map(a=>`<th>${esc(a.name)}</th>`).join("")}</tr></thead>
+<tbody>${CMP.map(r=>`<tr><th scope="row">${esc(r[0])}</th>${r.slice(1).map(cell).join("")}</tr>`).join("")}</tbody>`;
+
+const TABS=[["overview","Overview"],["use","How to use"],["under","Under the hood"],["privacy","Data & privacy"],["limits","Limits"]];
+$("#projects").innerHTML=APPS.map(a=>{
+  const flow=`<h4>What happens when you use it</h4><div class="flow">${a.flow.map(([w,t,d])=>`<div class="node"><span class="where ${W[w][1]}">${W[w][0]}</span><b>${esc(t)}</b>${d?`<small>${esc(d)}</small>`:""}</div>`).join("")}</div>`;
+  const panels={
+    overview:a.overview,
+    use:`<ol class="steps">${a.steps.map(([t,d])=>`<li><div><b>${t}</b>${d}</div></li>`).join("")}</ol>`,
+    under:flow+a.under,
+    privacy:a.privacy,
+    limits:a.limits
+  };
+  return `<article class="proj" id="${a.id}" data-app="${a.id}">
+    <div class="phead" style="background:${a.color}">
+      <span class="ic" aria-hidden="true">${a.icon}</span>
+      <div><h3>${esc(a.name)}</h3><p class="tl">${esc(a.tagline)}</p></div>
+      <a class="open" href="${a.url}" target="_blank" rel="noopener">Open app ↗</a>
+    </div>
+    <div class="facts">${Object.entries(a.facts).map(([k,v])=>`<div class="fact"><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join("")}</div>
+    <div class="tabs" role="tablist" aria-label="${esc(a.name)} sections">${TABS.map(([k,l],i)=>`<button role="tab" id="t-${a.id}-${k}" aria-controls="p-${a.id}-${k}" aria-selected="${i===0}" tabindex="${i===0?0:-1}" data-k="${k}">${l}</button>`).join("")}</div>
+    ${TABS.map(([k],i)=>`<div class="panel" role="tabpanel" id="p-${a.id}-${k}" aria-labelledby="t-${a.id}-${k}" ${i?"hidden":""}>${panels[k]}</div>`).join("")}
+  </article>`;
+}).join("");
+
+document.querySelectorAll(".tabs").forEach(list=>{
+  const btns=[...list.querySelectorAll("button")];
+  const pick=b=>{btns.forEach(x=>{const on=x===b;x.setAttribute("aria-selected",on);x.tabIndex=on?0:-1;document.getElementById(x.getAttribute("aria-controls")).hidden=!on;});};
+  list.addEventListener("click",e=>{const b=e.target.closest("button");if(b)pick(b);});
+  list.addEventListener("keydown",e=>{const i=btns.indexOf(document.activeElement);if(i<0)return;
+    let n=null;if(e.key==="ArrowRight")n=(i+1)%btns.length;if(e.key==="ArrowLeft")n=(i-1+btns.length)%btns.length;
+    if(n!==null){e.preventDefault();btns[n].focus();pick(btns[n]);}});
+});
+
+$("#gloss").innerHTML=GLOSS.map(([t,d])=>`<div><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("");
+
+/* Search: filters apps; opens the first tab that contains the term */
+$("#q").addEventListener("input",e=>{
+  const q=e.target.value.trim().toLowerCase();let shown=0;
+  document.querySelectorAll(".proj").forEach(p=>{
+    const hit=!q||p.textContent.toLowerCase().includes(q);
+    p.style.display=hit?"":"none";
+    document.querySelector(`.card[data-app="${p.dataset.app}"]`).style.display=hit?"":"none";
+    if(hit)shown++;
+    if(hit&&q){
+      const panel=[...p.querySelectorAll(".panel")].find(x=>x.textContent.toLowerCase().includes(q));
+      if(panel)document.getElementById(panel.getAttribute("aria-labelledby")).click();
+    }
+  });
+  $("#empty").style.display=shown?"none":"block";
+});
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){const f=[...document.querySelectorAll(".proj")].find(p=>p.style.display!=="none");if(f)f.scrollIntoView();}});
+
+const tt=$("#toTop");
+addEventListener("scroll",()=>{tt.style.display=scrollY>700?"block":"none";},{passive:true});
+tt.onclick=()=>scrollTo({top:0});
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "380d8ec8229c44fc918be1dd9be1859b"}'></script>
+</body>
+</html>
