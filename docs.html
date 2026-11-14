@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Frankie Studio · App Docs</title>
-<meta name="description" content="How each of Frankie's five live apps works: what it does, how to use it, what happens behind the scenes, and where your data goes.">
+<meta name="description" content="How each of Frankie's six live apps works: what it does, how to use it, what happens behind the scenes, and where your data goes.">
 <meta name="theme-color" content="#1b2a4a">
 <link rel="canonical" href="https://frank7839.github.io/docs.html">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -169,7 +169,7 @@ footer a{color:var(--mustard)}
   <div class="grid-bg" aria-hidden="true"></div>
   <div class="stamp" aria-hidden="true"></div><div class="stamp2" aria-hidden="true"></div>
   <div class="in">
-    <div class="kicker">Documentation · 5 live apps</div>
+    <div class="kicker">Documentation · 6 live apps</div>
     <h1>How every app works.</h1>
     <p>For each app: what it's for, how to use it step by step, what happens behind the scenes after you tap a button, where your data goes, and its known limits. Everything here is written in plain words, with no sign-up needed.</p>
     <div class="search" role="search">
@@ -397,18 +397,48 @@ const APPS=[
   </table>
   <p style="margin-top:14px">Why the snap? A JPEG is stored as 8×8 (or 16×16) pixel blocks. Cutting exactly on those block edges lets Truecrop keep the original compressed data untouched, which is what makes the crop lossless. Output is always sRGB, and orientation and size tags are corrected after cropping.</p>`,
   privacy:`<ul><li>Photos never leave your device. There's no upload and no server processing.</li><li>No AI and no paid API.</li><li>Works offline after the first visit.</li></ul>`,
-  limits:`<ul><li>The top and left crop edges snap to the JPEG's 8 or 16 px grid in lossless mode.</li><li>Progressive JPEGs (exported by some editing apps) can't be cut losslessly. Truecrop says so and re-saves once.</li><li>Resizing always re-saves, because the pixels change.</li><li>Enlarging can't add real detail, so you get a warning.</li><li>On phones, files over about 16 MP may be slow or fail when re-saving at full size. A 26 MP resize took about 12 s in testing.</li></ul>`
+  limits:`<ul><li>The top and left crop edges snap to the JPEG's 8 or 16 px grid in lossless mode.</li><li>Progressive JPEGs (exported by some editing apps) can't be cut losslessly. Truecrop says so and re-saves once.</li><li>Resizing always re-saves, because the pixels change.</li><li>Enlarging can't add real detail, so you get a warning.</li><li>On phones, files over about 16 MP may be slow or fail when re-saving at full size. A 26 MP resize took about 12 s in testing.</li></ul>`},
+{
+  id:"framestack",name:"Framestack",icon:"▤",color:"#1d6f80",
+  tagline:"Pull the sharpest frame out of a video, or stack a range into one long-exposure photo.",
+  url:"https://frank7839.github.io/framestack/",
+  tags:["Photography","Video","No upload"],
+  facts:{"Runs on":"GitHub Pages","AI":"None","Account":"Not needed","Install":"Web page"},
+  overview:`<p>Framestack treats a video clip as a stack of photos. Step through it frame by frame to save one still, let it score every frame for sharpness, or blend a range of frames into a single image, like a long exposure made from a handheld clip on a tripod.</p>
+  <div class="cols">
+    <div class="box"><h5>Find a frame</h5><ul><li>Step −1/+1 or ±10 frames (arrow keys, Shift jumps 10)</li><li>Drag along the filmstrip</li><li>Find sharpest scores every frame in the range and jumps to the best one</li></ul></div>
+    <div class="box"><h5>Stack modes</h5><ul><li><b>Long exposure</b> (average): silky water, cleaner low light</li><li><b>Light trails</b> (lighten): car lights, stars, fireworks</li><li><b>Clean plate</b> (median): removes people and cars passing through</li></ul></div>
+    <div class="box"><h5>Export</h5><ul><li>Current frame or the stacked result as PNG</li><li>Full video resolution</li><li>Built-in night-street sample clip to try it first</li></ul></div>
+  </div>`,
+  steps:[
+    ["Open a video","Tap Open video and pick an MP4 (H.264 works everywhere). Or try the built-in sample clip first."],
+    ["Find your spot","Step through frames with the buttons, arrow keys or the filmstrip."],
+    ["Set a range","Press I to mark the start and O to mark the end."],
+    ["Pick the sharpest (optional)","Tap Find sharpest. Scores appear as bars under the filmstrip and it jumps to the winner."],
+    ["Stack (optional)","Choose Long exposure, Light trails or Clean plate and tap Stack."],
+    ["Save","Save the current frame or the stacked result as a PNG."]
+  ],
+  flow:[
+    ["you","You open a video",""],
+    ["device","Decoded in your browser","The browser's own video player reads each frame. Nothing is uploaded."],
+    ["device","Frames are scored or blended","Sharpness is measured per frame; stacking averages, lightens or takes the median of each pixel across the range."],
+    ["device","Saved to your device","The frame or result downloads as a PNG."]
+  ],
+  under:`<p>Framestack is a single web page served from GitHub Pages. All decoding, scoring and stacking happens in the page using the browser's video element and canvas, so it works the same on a laptop or phone.</p>
+  <table class="files"><tr><td>framestack/index.html</td><td>The whole app: player, filmstrip, sharpness scoring, stacking and export.</td></tr></table>`,
+  privacy:`<ul><li>Your video never leaves your device. No upload, no server, no AI.</li><li>Nothing is saved after you close the page.</li></ul>`,
+  limits:`<ul><li>Frame stepping jumps by timestamp, so it can occasionally land one frame off. That doesn't matter for stacking.</li><li>No frame alignment yet: handheld clips stack into blur, so use a tripod or rest the camera on something.</li><li>HEVC videos (the default on many phones) may not open in some browsers, mostly Chrome on Windows. An H.264 MP4 copy works everywhere.</li><li>Clean plate is capped at 15 frames and 1920 px so phones don't run out of memory.</li><li>A video frame is not a photo: shoot 4K at a fast shutter speed for the sharpest stills.</li></ul>`
 }
 ];
 
 const CMP=[
- ["Where it runs","GitHub Pages","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker"],
- ["Uses AI",0,0,1,1,0],
- ["Needs an API key",0,0,1,0,0],
- ["Sends your content out","No","No","To your AI provider","Song info to Gemini and Deezer","No"],
- ["Saves on your device","Songs, clips","Shortlist","API key","—","—"],
- ["Installable app",1,1,0,1,1],
- ["Works offline","Once loaded",1,0,0,1]
+ ["Where it runs","GitHub Pages","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker","Cloudflare Worker","GitHub Pages"],
+ ["Uses AI",0,0,1,1,0,0],
+ ["Needs an API key",0,0,1,0,0,0],
+ ["Sends your content out","No","No","To your AI provider","Song info to Gemini and Deezer","No","No"],
+ ["Saves on your device","Songs, clips","Shortlist","API key","—","—","—"],
+ ["Installable app",1,1,0,1,1,0],
+ ["Works offline","Once loaded",1,0,0,1,"Once loaded"]
 ];
 
 const GLOSS=[

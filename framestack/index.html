@@ -1,0 +1,629 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><title>Framestack · frame-by-frame video stacker</title><meta name="description" content="Step through a video frame by frame, find the sharpest frame, and blend a range into one long-exposure, light-trail or clean-plate image. Runs in your browser; nothing is uploaded."><link rel="icon" href="../favicon-32.png"></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: editing-suite split. Dark viewing well + filmstrip on the left, a narrow control column on the right; stacks to one column on phones. */
+:root{
+  --bg:#eceef2; --panel:#ffffff; --ink:#151922; --muted:#586172; --line:#d4d8e0;
+  --well:#0c0e13; --well-ink:#e9ebef; --accent:#cf5a1f; --accent-ink:#ffffff;
+  --range:#23879b; --range-soft:rgba(35,135,155,.20); --bar:#9aa3b2;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10131a; --panel:#171b23; --ink:#e5e8ed; --muted:#949bab; --line:#29303b;
+  --well:#06080b; --well-ink:#e9ebef; --accent:#ef7a3d; --accent-ink:#1a0d05;
+  --range:#4cb6ca; --range-soft:rgba(76,182,202,.20); --bar:#5c6576; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10131a; --panel:#171b23; --ink:#e5e8ed; --muted:#949bab; --line:#29303b;
+  --well:#06080b; --well-ink:#e9ebef; --accent:#ef7a3d; --accent-ink:#1a0d05;
+  --range:#4cb6ca; --range-soft:rgba(76,182,202,.20); --bar:#5c6576; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+h1{font-family:var(--f-display);font-stretch:118%;font-weight:800;font-size:1.55rem;letter-spacing:-.01em;margin:0;line-height:1}
+h1 span{color:var(--accent)}
+.tag{color:var(--muted);font-size:.85rem}
+button,.btn{font:inherit;font-weight:600;font-size:.88rem;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px}
+button:hover,.btn:hover{border-color:var(--muted)}
+button:focus-visible,.btn:focus-visible,input:focus-visible+label,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.primary:hover{filter:brightness(1.07);border-color:var(--accent)}
+main{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:960px){main{grid-template-columns:minmax(0,1fr) 330px;align-items:start}}
+.stage{display:grid;gap:10px;min-width:0}
+.well{position:relative;background:var(--well);border-radius:10px;overflow:hidden;display:grid;place-items:center;min-height:180px}
+.well canvas{display:block;width:100%;height:auto;max-height:64vh;object-fit:contain}
+.ov{position:absolute;font-family:var(--f-mono);font-size:.74rem;color:var(--well-ink);background:rgba(6,8,11,.62);padding:3px 8px;border-radius:5px;letter-spacing:.02em}
+.ov.tl{top:10px;left:10px;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov.bl{bottom:10px;left:10px;font-size:.82rem}
+.tabs{position:absolute;top:10px;right:10px;display:flex;background:rgba(6,8,11,.62);border-radius:7px;padding:3px;gap:2px}
+.tabs button{min-height:28px;padding:3px 10px;font-size:.78rem;background:transparent;border:0;color:#b9bec8}
+.tabs button[aria-pressed="true"]{background:#e9ebef;color:#0c0e13}
+.transport{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.transport .grp{display:flex;gap:4px}
+.transport button{min-width:40px;padding:6px 10px;font-family:var(--f-mono);font-weight:500}
+.readout{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:.85rem;color:var(--muted);margin-left:auto}
+.readout b{color:var(--ink);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.strip{position:relative;border-radius:8px;overflow:hidden;background:var(--well);cursor:pointer;touch-action:none;user-select:none}
+.strip canvas{display:block;width:100%}
+#thumbs{height:56px}
+#sharp{height:26px;background:var(--panel);border-top:1px solid var(--line)}
+.rangebox{position:absolute;top:0;height:56px;background:var(--range-soft);border-left:2px solid var(--range);border-right:2px solid var(--range);pointer-events:none}
+.playhead{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--accent);pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.rangeline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rangeline .lbl{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rangeline .lbl b{color:var(--range);font-weight:500}
+kbd{font-family:var(--f-mono);font-size:.72rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;color:var(--muted)}
+aside{display:grid;gap:12px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px}
+.panel h2{font-family:var(--f-display);font-stretch:100%;font-weight:700;font-size:1rem;margin:0;text-wrap:balance}
+.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.hint{color:var(--muted);font-size:.82rem;margin:0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1 1 auto}
+.modes{display:grid;gap:6px}
+.modes input{position:absolute;opacity:0;pointer-events:none}
+.modes label{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.modes label .sw{grid-row:span 2;width:30px;height:30px;border-radius:6px;align-self:center}
+.modes label b{font-weight:600;font-size:.9rem}
+.modes label small{color:var(--muted);font-size:.78rem;line-height:1.35}
+.modes input:checked+label{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sw.avg{background:linear-gradient(90deg,#1b2440,#3d4f7a 40%,#9fb3d6 50%,#3d4f7a 60%,#1b2440)}
+.sw.lit{background:radial-gradient(circle at 20% 60%,#fff2c4 0 2px,transparent 3px),linear-gradient(170deg,transparent 45%,#ffd27a 47% 51%,transparent 53%),#121521}
+.sw.med{background:linear-gradient(#5d6b80 0 55%,#2a2f39 55%)}
+select{font:inherit;font-size:.88rem;padding:7px 8px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);min-height:36px;width:100%}
+.field{display:grid;gap:4px}
+.field span{font-size:.8rem;color:var(--muted)}
+.count{font-family:var(--f-mono);font-size:.82rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.count b{color:var(--ink);font-weight:500}
+.progress{display:grid;gap:6px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .12s linear}
+.status{font-size:.84rem;min-height:1.3em;margin:0}
+.meta{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);margin:0}
+.drop{position:fixed;inset:0;z-index:20;background:rgba(10,12,16,.72);display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-size:1.5rem;font-stretch:115%;font-weight:700;pointer-events:none}
+.drop div{border:2px dashed #fff;border-radius:16px;padding:40px 48px}
+.modal{position:fixed;inset:0;z-index:30;background:rgba(6,8,11,.78);display:grid;place-items:center;padding:20px max(20px,env(safe-area-inset-right,0px)) 20px max(20px,env(safe-area-inset-left,0px))}
+.modal .box{background:var(--panel);color:var(--ink);border-radius:12px;padding:16px;max-width:min(900px,100%);max-height:100%;overflow:auto;display:grid;gap:10px}
+.modal img{max-height:60vh;width:auto;margin:0 auto;border-radius:6px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.85rem;z-index:40}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>Frame<span>stack</span></h1><span class="tag">Pull frames from video. Blend them into one image.</span></div>
+    <input type="file" id="file" accept="video/*" class="sr">
+    <label for="file" class="btn primary" id="openBtn">Open video</label>
+    <button id="sampleBtn" hidden>Back to sample</button>
+  </header>
+
+  <main>
+    <section class="stage">
+      <div class="well" id="well">
+        <canvas id="frame" width="1280" height="720" aria-label="Current frame"></canvas>
+        <canvas id="result" width="2" height="2" hidden aria-label="Stacked result"></canvas>
+        <div class="ov tl" id="srcName">Sample clip</div>
+        <div class="ov bl" id="tc">00:00:00:00</div>
+        <div class="tabs" id="tabs" hidden>
+          <button id="tabFrame" aria-pressed="true">Frame</button>
+          <button id="tabResult" aria-pressed="false">Result</button>
+        </div>
+      </div>
+
+      <div class="transport">
+        <div class="grp">
+          <button id="b10" title="Back 10 frames (Shift+←)">−10</button>
+          <button id="b1" title="Back 1 frame (←)">−1</button>
+          <button id="f1" title="Forward 1 frame (→)">+1</button>
+          <button id="f10" title="Forward 10 frames (Shift+→)">+10</button>
+        </div>
+        <div class="readout">Frame <b id="fno">1</b> / <span id="fcount">1</span> · <span id="dims"></span></div>
+      </div>
+      <label class="sr" for="scrub">Scrub through frames</label>
+      <input type="range" id="scrub" min="0" max="0" value="0" step="1">
+
+      <div class="strip" id="strip" aria-label="Filmstrip. Click to jump to a frame.">
+        <canvas id="thumbs"></canvas>
+        <canvas id="sharp" aria-label="Sharpness per frame"></canvas>
+        <div class="rangebox" id="rangeBox"></div>
+        <div class="playhead" id="playhead"></div>
+      </div>
+
+      <div class="rangeline">
+        <button id="setIn">Set in <kbd>I</kbd></button>
+        <button id="setOut">Set out <kbd>O</kbd></button>
+        <button id="clearRange">Whole clip</button>
+        <span class="lbl" id="rangeLbl"></span>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <div class="eyebrow">One frame</div>
+        <h2>Pick the best frame</h2>
+        <p class="hint">Scores every frame in the in/out range for sharpness and jumps to the crispest one. Taller bars under the filmstrip are sharper.</p>
+        <div class="row">
+          <button id="findBtn">Find sharpest</button>
+          <button id="saveFrameBtn" class="primary">Save frame PNG</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Many frames → one image</div>
+        <h2>Stack the range</h2>
+        <div class="modes" role="radiogroup" aria-label="Blend mode">
+          <input type="radio" name="mode" id="mAvg" value="avg" checked>
+          <label for="mAvg"><span class="sw avg"></span><b>Long exposure</b><small>Average. Smooths water and crowds, blurs motion, cuts noise in low light.</small></label>
+          <input type="radio" name="mode" id="mLit" value="lighten">
+          <label for="mLit"><span class="sw lit"></span><b>Light trails</b><small>Lighten. Keeps the brightest pixel: car lights, stars, fireworks.</small></label>
+          <input type="radio" name="mode" id="mMed" value="median">
+          <label for="mMed"><span class="sw med"></span><b>Clean plate</b><small>Median. Removes people and cars passing through. Uses up to 15 frames at 1920 px.</small></label>
+        </div>
+        <label class="field"><span>Use</span>
+          <select id="step">
+            <option value="1">Every frame</option>
+            <option value="2">Every 2nd frame</option>
+            <option value="3">Every 3rd frame</option>
+            <option value="5">Every 5th frame</option>
+            <option value="10">Every 10th frame</option>
+          </select>
+        </label>
+        <label class="field" id="fpsField" hidden><span>Frame rate</span>
+          <select id="fps"></select>
+        </label>
+        <div class="count" id="stackCount"></div>
+        <button id="stackBtn" class="primary">Stack frames</button>
+        <p class="hint">Keep the camera still or on a tripod. This version does not align frames, so handheld shake turns into blur.</p>
+      </div>
+
+      <div class="panel" id="resultPanel" hidden>
+        <div class="eyebrow">Result</div>
+        <p class="meta" id="resultMeta"></p>
+        <button id="saveResultBtn" class="primary">Save result PNG</button>
+      </div>
+
+      <div class="panel progress">
+        <p class="status" id="status" role="status">Sample clip loaded. Open your own video to start.</p>
+        <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
+        <button id="cancelBtn" hidden>Cancel</button>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="drop" id="drop" hidden><div>Drop video to open</div></div>
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <strong>Save this image</strong>
+    <p class="hint">Saving files is not available in this view. Right-click or long-press the image and choose Save image.</p>
+    <img id="modalImg" alt="Image to save">
+    <button id="modalClose">Close</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+const pad = (n, w=2) => String(n).padStart(w, '0');
+
+const frameCanvas = $('#frame'), fctx = frameCanvas.getContext('2d', {willReadFrequently:true});
+const resultCanvas = $('#result'), rctx = resultCanvas.getContext('2d');
+const S = { src:null, cur:0, inF:0, outF:0, busy:false, cancel:false, sharp:null, result:null, view:'frame', loadToken:0 };
+
+/* ---------- downloads capability ---------- */
+let dl = null;
+try { window.claude?.use?.('downloads')?.then(d => { dl = d; }).catch(() => {}); } catch (e) {}
+
+/* ---------- sample clip (procedural night street) ---------- */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function makeSample(){
+  const W=1280, H=720, fps=24, count=144, rnd=mulberry32(11);
+  const roadTop=H*0.72;
+  const stars=Array.from({length:150},()=>[rnd()*W, rnd()*H*0.45, rnd()*1.3+0.5, rnd()]);
+  const blds=[]; let x=-10;
+  while(x<W){ const w=50+rnd()*90, h=70+rnd()*210, win=[]; for(let yy=roadTop-h+10; yy<roadTop-14; yy+=16) for(let xx=x+7; xx<x+w-8; xx+=13) if(rnd()<0.32) win.push([xx,yy]); blds.push([x,w,h,win]); x+=w+rnd()*8; }
+  const cars=[{lane:0,dir:1,v:300,o:0},{lane:0,dir:1,v:230,o:620},{lane:1,dir:-1,v:340,o:200},{lane:1,dir:-1,v:260,o:900},{lane:0,dir:1,v:380,o:1150},{lane:1,dir:-1,v:210,o:520}];
+  const lamps=[160,520,880,1200];
+  const noise=document.createElement('canvas'); noise.width=noise.height=256;
+  { const nc=noise.getContext('2d'), id=nc.createImageData(256,256); for(let i=0;i<id.data.length;i+=4){ const v=rnd()*255; id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=34; } nc.putImageData(id,0,0); }
+  const scene=document.createElement('canvas'); scene.width=W; scene.height=H; const s=scene.getContext('2d');
+  const pattern=s.createPattern(noise,'repeat');
+  const glow=(x,y,r,c)=>{ const g=s.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)'); s.fillStyle=g; s.fillRect(x-r,y-r,r*2,r*2); };
+  function render(i){
+    const t=i/fps;
+    const sky=s.createLinearGradient(0,0,0,roadTop); sky.addColorStop(0,'#0a1230'); sky.addColorStop(.55,'#33295a'); sky.addColorStop(1,'#b8603a');
+    s.globalCompositeOperation='source-over'; s.fillStyle=sky; s.fillRect(0,0,W,roadTop);
+    for(const st of stars){ s.fillStyle=`rgba(255,255,255,${0.35+0.45*Math.abs(Math.sin(st[3]*40+t*2))})`; s.fillRect(st[0],st[1],st[2],st[2]); }
+    for(const [bx,bw,bh,win] of blds){ s.fillStyle='#0b0d14'; s.fillRect(bx,roadTop-bh,bw,bh); s.fillStyle='rgba(255,190,110,.78)'; for(const [wx,wy] of win) s.fillRect(wx,wy,5,7); }
+    s.fillStyle='#1d1e24'; s.fillRect(0,roadTop,W,H*0.05);
+    s.fillStyle='#0d0e12'; s.fillRect(0,roadTop+H*0.05,W,H);
+    s.fillStyle='#3b3b40'; for(let dx=0; dx<W; dx+=90) s.fillRect(dx,H*0.86,46,4);
+    for(const lx of lamps){ s.fillStyle='#14151a'; s.fillRect(lx-2,roadTop-150,4,152); }
+    const px=((W*0.1+i*6.5)%(W+80))-40, py=roadTop+H*0.04;
+    s.fillStyle='#d9d3c7'; s.fillRect(px-7,py-36,14,30); s.fillRect(px-6,py-6,4,8); s.fillRect(px+2,py-6,4,8);
+    s.beginPath(); s.arc(px,py-43,7,0,Math.PI*2); s.fill();
+    s.globalCompositeOperation='lighter';
+    for(const lx of lamps) glow(lx,roadTop-150,70,'rgba(255,170,80,.55)');
+    for(const c of cars){
+      const span=W+320, cx=(((c.o+c.dir*c.v*t)%span)+span)%span-160, cy=c.lane?H*0.92:H*0.81;
+      s.globalCompositeOperation='source-over'; s.fillStyle='#16181e'; s.fillRect(cx-60,cy-16,120,24);
+      s.globalCompositeOperation='lighter';
+      const fx=cx+c.dir*60, bx=cx-c.dir*60;
+      glow(fx,cy-6,34,'rgba(255,248,220,.95)'); glow(fx,cy-6,10,'rgba(255,255,255,1)');
+      glow(bx,cy-8,18,'rgba(255,40,30,.9)');
+    }
+    s.globalCompositeOperation='source-over';
+    const ox=(i*97)%256, oy=(i*53)%256;
+    s.save(); s.translate(-ox,-oy); s.fillStyle=pattern; s.fillRect(ox,oy,W,H); s.restore();
+  }
+  const shake=i=>Math.max(0, 2.6*Math.sin(i*0.21)+1.3*Math.sin(i*0.9+1));
+  return { name:'Sample clip · night street', base:'sample', W, H, fps, count, isSample:true,
+    async draw(i, ctx, w, h){
+      render(i); const b=shake(i), k=w/W;
+      ctx.globalAlpha=1; ctx.drawImage(scene,0,0,w,h);
+      if(b>0.25){ for(let j=1;j<=3;j++){ ctx.globalAlpha=0.32; ctx.drawImage(scene,b*j*2*k,b*j*0.6*k,w,h); } ctx.globalAlpha=1; }
+    } };
+}
+
+/* ---------- video source ---------- */
+const FPS_LIST=[23.976,24,25,29.97,30,48,50,59.94,60,120];
+function nearestFps(f){ let best=30, d=1e9; for(const c of FPS_LIST){ const e=Math.abs(c-f); if(e<d){ d=e; best=c; } } return best; }
+function detectFps(v){
+  if(!v.requestVideoFrameCallback) return Promise.resolve(30);
+  return new Promise(res=>{
+    const times=[]; let done=false;
+    const finish=()=>{ if(done) return; done=true; v.pause();
+      const diffs=[]; for(let k=1;k<times.length;k++){ const d=times[k]-times[k-1]; if(d>0.001) diffs.push(d); }
+      diffs.sort((a,b)=>a-b); res(diffs.length? nearestFps(1/diffs[0]) : 30); };
+    const cb=(now,md)=>{ times.push(md.mediaTime); if(times.length<14 && !done) v.requestVideoFrameCallback(cb); else finish(); };
+    v.requestVideoFrameCallback(cb);
+    v.play().catch(()=>finish());
+    setTimeout(finish,1600);
+  });
+}
+function seekVideo(src,i){
+  const v=src.video, t=Math.min(v.duration-0.0005, (i+0.5)/src.fps);
+  if(src.lastT===t) return Promise.resolve();
+  src.lastT=t;
+  return new Promise(res=>{
+    let fin=false; const done=()=>{ if(fin) return; fin=true; v.removeEventListener('seeked',onSeeked); res(); };
+    const onSeeked=()=>{ if(v.requestVideoFrameCallback){ v.requestVideoFrameCallback(()=>done()); setTimeout(done,150); } else done(); };
+    v.addEventListener('seeked',onSeeked);
+    v.currentTime=t;
+    setTimeout(done,4000);
+  });
+}
+async function makeVideoSource(file){
+  const v=document.createElement('video'); v.muted=true; v.playsInline=true; v.preload='auto';
+  const url=URL.createObjectURL(file); v.src=url;
+  await new Promise((res,rej)=>{ v.onloadeddata=res; v.onerror=()=>rej(new Error('decode')); setTimeout(()=>rej(new Error('timeout')),20000); });
+  if(!v.videoWidth) throw new Error('decode');
+  if(!isFinite(v.duration)) throw new Error('duration');
+  const fps=await detectFps(v);
+  v.pause();
+  const src={ name:file.name, base:(file.name.replace(/\.[^.]+$/,'').replace(/[^\w-]+/g,'_').slice(0,60)||'video'),
+    W:v.videoWidth, H:v.videoHeight, fps, detected:fps, count:Math.max(1,Math.floor(v.duration*fps)), video:v, url, lastT:-1,
+    async draw(i,ctx,w,h){ await seekVideo(this,i); ctx.drawImage(v,0,0,w,h); } };
+  src.lastT=-1;
+  return src;
+}
+
+/* ---------- navigation ---------- */
+let navTarget=null, navRunning=false;
+function goTo(i, keepView){
+  if(!S.src) return;
+  S.cur=clamp(Math.round(i),0,S.src.count-1);
+  if(!keepView) setView('frame');
+  updateUI();
+  if(S.busy) return;
+  navTarget=S.cur; if(!navRunning) navLoop();
+}
+async function navLoop(){
+  navRunning=true;
+  while(navTarget!==null){ const i=navTarget; navTarget=null; try{ await S.src.draw(i,fctx,frameCanvas.width,frameCanvas.height); }catch(e){} }
+  navRunning=false;
+}
+async function navIdle(){ while(navRunning) await sleep(16); }
+
+/* ---------- UI ---------- */
+function timecode(i){ const src=S.src, rf=Math.round(src.fps), fr=i%rf, sec=Math.floor(i/rf); return `${pad(Math.floor(sec/3600))}:${pad(Math.floor(sec/60)%60)}:${pad(sec%60)}:${pad(fr)}`; }
+function stackFrames(){
+  const step=+$('#step').value, mode=modeVal(); let f=[];
+  for(let i=S.inF;i<=S.outF;i+=step) f.push(i);
+  if(mode==='median' && f.length>15){ const n=f.length; f=Array.from({length:15},(_,k)=>f[Math.round(k*(n-1)/14)]); }
+  return f;
+}
+const modeVal=()=>document.querySelector('input[name=mode]:checked').value;
+function updateUI(){
+  const src=S.src; if(!src) return;
+  const w=String(src.count).length;
+  $('#fno').textContent=pad(S.cur+1,w); $('#fcount').textContent=src.count;
+  $('#tc').textContent=timecode(S.cur);
+  const sc=$('#scrub'); sc.max=src.count-1; if(document.activeElement!==sc) sc.value=S.cur;
+  $('#playhead').style.left=((S.cur+0.5)/src.count*100)+'%';
+  const rb=$('#rangeBox'); rb.style.left=(S.inF/src.count*100)+'%'; rb.style.width=((S.outF-S.inF+1)/src.count*100)+'%';
+  $('#rangeLbl').innerHTML=`In <b>${pad(S.inF+1,w)}</b> · Out <b>${pad(S.outF+1,w)}</b> · ${S.outF-S.inF+1} frames`;
+  const f=stackFrames(), step=+$('#step').value;
+  let note=''; if(modeVal()==='median' && Math.ceil((S.outF-S.inF+1)/step)>15) note=' (spread across the range)';
+  $('#stackCount').innerHTML=`Will blend <b>${f.length}</b> frames${note}`;
+  for(const id of ['b10','b1','f1','f10','setIn','setOut','clearRange','findBtn','saveFrameBtn','stackBtn','saveResultBtn','sampleBtn']) $('#'+id).disabled=S.busy;
+  $('#openBtn').style.pointerEvents=S.busy?'none':''; $('#openBtn').style.opacity=S.busy?.45:1;
+  $('#fps').disabled=S.busy;
+}
+function setView(v){
+  if(v==='result' && !S.result) v='frame';
+  S.view=v;
+  frameCanvas.hidden=v!=='frame'; resultCanvas.hidden=v!=='result';
+  $('#tabFrame').setAttribute('aria-pressed',v==='frame'); $('#tabResult').setAttribute('aria-pressed',v==='result');
+  $('#tc').hidden=v!=='frame';
+}
+function status(t){ $('#status').textContent=t; }
+function progress(p){ const w=$('#barWrap'); if(p==null){ w.hidden=true; $('#cancelBtn').hidden=true; return; } w.hidden=false; $('#cancelBtn').hidden=false; $('#bar').style.width=(p*100).toFixed(1)+'%'; }
+let toastT; function toast(t){ const el=$('#toast'); el.textContent=t; el.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>el.hidden=true,2600); }
+
+/* ---------- filmstrip ---------- */
+async function buildThumbs(){
+  const src=S.src, token=S.loadToken, c=$('#thumbs');
+  const cw=Math.max(1,Math.round(c.parentElement.getBoundingClientRect().width)), ch=56, dpr=Math.min(2,window.devicePixelRatio||1);
+  c.width=cw*dpr; c.height=ch*dpr;
+  const ctx=c.getContext('2d'); ctx.fillStyle='#0c0e13'; ctx.fillRect(0,0,c.width,c.height);
+  const tw=ch*src.W/src.H, n=clamp(Math.ceil(cw/tw),4,48), slot=cw/n;
+  const sc=document.createElement('canvas'); sc.width=Math.max(1,Math.round(tw*dpr)); sc.height=ch*dpr; const sctx=sc.getContext('2d');
+  for(let k=0;k<n;k++){
+    if(token!==S.loadToken) return;
+    const i=Math.floor((k+0.5)/n*src.count);
+    await src.draw(i,sctx,sc.width,sc.height);
+    const cropW=Math.min(sc.width,slot*dpr);
+    ctx.drawImage(sc,(sc.width-cropW)/2,0,cropW,sc.height,k*slot*dpr,0,slot*dpr,ch*dpr);
+    ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(Math.round((k+1)*slot*dpr)-1,0,1*dpr,ch*dpr);
+  }
+  drawSharp();
+}
+function drawSharp(){
+  const c=$('#sharp'), cw=Math.max(1,Math.round(c.getBoundingClientRect().width)), h=26, dpr=Math.min(2,window.devicePixelRatio||1);
+  c.width=cw*dpr; c.height=h*dpr; const ctx=c.getContext('2d'); ctx.scale(dpr,dpr);
+  const src=S.src; if(!src || !S.sharp) { ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--muted'); ctx.font='11px '+getComputedStyle(document.body).getPropertyValue('--f-mono'); ctx.fillText('Sharpness appears here after "Find sharpest"',8,17); return; }
+  let max=0, best=-1; for(let i=0;i<src.count;i++){ const v=S.sharp[i]; if(v>max){ max=v; best=i; } }
+  const bw=Math.max(1,cw/src.count), cs=getComputedStyle(document.body);
+  const bar=cs.getPropertyValue('--bar'), acc=cs.getPropertyValue('--accent');
+  for(let i=0;i<src.count;i++){ const v=S.sharp[i]; if(!(v>=0)) continue; const hh=Math.max(1,(v/max)*(h-3)); ctx.fillStyle=i===best?acc:bar; ctx.fillRect(i/src.count*cw,h-hh,Math.max(1,bw-(bw>3?1:0)),hh); }
+  if(best>=0){ ctx.fillStyle=acc; ctx.fillRect(best/src.count*cw,0,Math.max(2,bw),h); }
+}
+function stripPointer(e){
+  if(!S.src || S.busy) return;
+  const r=$('#strip').getBoundingClientRect();
+  goTo(Math.floor(clamp((e.clientX-r.left)/r.width,0,0.99999)*S.src.count));
+}
+let dragging=false;
+$('#strip').addEventListener('pointerdown',e=>{ dragging=true; $('#strip').setPointerCapture(e.pointerId); stripPointer(e); });
+$('#strip').addEventListener('pointermove',e=>{ if(dragging) stripPointer(e); });
+$('#strip').addEventListener('pointerup',()=>dragging=false);
+$('#strip').addEventListener('pointercancel',()=>dragging=false);
+
+/* ---------- loading ---------- */
+async function useSource(src){
+  S.loadToken++;
+  if(S.src && S.src.url) URL.revokeObjectURL(S.src.url);
+  S.src=src; S.cur=0; S.inF=0; S.outF=src.count-1; S.sharp=null; S.result=null;
+  $('#tabs').hidden=true; $('#resultPanel').hidden=true; setView('frame');
+  frameCanvas.width=src.W; frameCanvas.height=src.H;
+  $('#srcName').textContent=src.name;
+  $('#dims').textContent=`${src.W}×${src.H} · ${src.isSample?src.fps+' fps':''}`.replace(/ · $/,'');
+  $('#sampleBtn').hidden=!!src.isSample;
+  const ff=$('#fpsField'); ff.hidden=!!src.isSample;
+  if(!src.isSample){
+    const sel=$('#fps'); sel.innerHTML='';
+    for(const f of FPS_LIST){ const o=document.createElement('option'); o.value=f; o.textContent=f+' fps'+(f===src.detected?' (detected)':''); if(f===src.fps) o.selected=true; sel.appendChild(o); }
+  }
+  updateUI();
+  await src.draw(0,fctx,frameCanvas.width,frameCanvas.height);
+  S.busy=true; updateUI();
+  await buildThumbs();
+  S.busy=false; updateUI(); goTo(S.cur,true);
+}
+async function openFile(file){
+  if(!file || S.busy) return;
+  if(!/^video\//.test(file.type) && !/\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(file.name)){ status('That file is not a video. Choose an MP4, MOV or WebM.'); return; }
+  S.busy=true; updateUI(); status('Opening '+file.name+'…');
+  try{
+    const src=await makeVideoSource(file);
+    S.busy=false;
+    await useSource(src);
+    status(`${src.count} frames at ${src.fps} fps. Step with ← →, set a range with I and O.`);
+  }catch(e){
+    S.busy=false; updateUI();
+    status(e.message==='duration'
+      ? 'This video has no readable length, so frames cannot be counted. Re-save it as MP4 and try again.'
+      : 'This browser cannot decode that video. Phones often record HEVC (H.265). Try an MP4 (H.264) copy, or open this page in Safari or Edge.');
+  }
+}
+$('#file').addEventListener('change',e=>{ openFile(e.target.files[0]); e.target.value=''; });
+$('#sampleBtn').addEventListener('click',async()=>{ await useSource(makeSample()); status('Sample clip loaded.'); });
+$('#fps').addEventListener('change',async e=>{
+  const src=S.src; if(!src || src.isSample) return;
+  src.fps=+e.target.value; src.count=Math.max(1,Math.floor(src.video.duration*src.fps)); src.lastT=-1;
+  S.cur=Math.min(S.cur,src.count-1); S.inF=0; S.outF=src.count-1; S.sharp=null; S.loadToken++;
+  S.busy=true; updateUI(); await buildThumbs(); S.busy=false; updateUI(); goTo(S.cur);
+});
+let dragDepth=0;
+window.addEventListener('dragenter',e=>{ if(e.dataTransfer?.types?.includes('Files')){ dragDepth++; $('#drop').hidden=false; } });
+window.addEventListener('dragleave',()=>{ dragDepth=Math.max(0,dragDepth-1); if(!dragDepth) $('#drop').hidden=true; });
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{ e.preventDefault(); dragDepth=0; $('#drop').hidden=true; const f=e.dataTransfer?.files?.[0]; if(f) openFile(f); });
+
+/* ---------- controls ---------- */
+$('#b10').onclick=()=>goTo(S.cur-10); $('#b1').onclick=()=>goTo(S.cur-1);
+$('#f1').onclick=()=>goTo(S.cur+1); $('#f10').onclick=()=>goTo(S.cur+10);
+$('#scrub').addEventListener('input',e=>goTo(+e.target.value));
+function setIn(){ S.inF=S.cur; if(S.outF<S.inF) S.outF=S.src.count-1; updateUI(); }
+function setOut(){ S.outF=S.cur; if(S.inF>S.outF) S.inF=0; updateUI(); }
+$('#setIn').onclick=setIn; $('#setOut').onclick=setOut;
+$('#clearRange').onclick=()=>{ S.inF=0; S.outF=S.src.count-1; updateUI(); };
+$('#step').addEventListener('change',updateUI);
+document.querySelectorAll('input[name=mode]').forEach(r=>r.addEventListener('change',updateUI));
+$('#tabFrame').onclick=()=>setView('frame'); $('#tabResult').onclick=()=>setView('result');
+$('#cancelBtn').onclick=()=>{ S.cancel=true; };
+document.addEventListener('keydown',e=>{
+  if(!S.src || S.busy || e.metaKey || e.ctrlKey || e.altKey) return;
+  const tg=e.target, tag=tg.tagName;
+  if(tag==='SELECT' || (tag==='INPUT' && tg.type!=='radio') ) return;
+  const k=e.key;
+  if(k==='ArrowLeft'){ goTo(S.cur-(e.shiftKey?10:1)); e.preventDefault(); }
+  else if(k==='ArrowRight'){ goTo(S.cur+(e.shiftKey?10:1)); e.preventDefault(); }
+  else if(k==='Home'){ goTo(0); e.preventDefault(); }
+  else if(k==='End'){ goTo(S.src.count-1); e.preventDefault(); }
+  else if(k==='i'||k==='I') setIn();
+  else if(k==='o'||k==='O') setOut();
+});
+
+/* ---------- sharpness ---------- */
+function lapVar(d,w,h){
+  const g=new Float32Array(w*h);
+  for(let i=0,p=0;i<g.length;i++,p+=4) g[i]=0.299*d[p]+0.587*d[p+1]+0.114*d[p+2];
+  let s=0,s2=0,n=0;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x, l=4*g[i]-g[i-1]-g[i+1]-g[i-w]-g[i+w]; s+=l; s2+=l*l; n++; }
+  const m=s/n; return s2/n-m*m;
+}
+async function findSharpest(){
+  const src=S.src; if(!src) return;
+  await navIdle(); S.busy=true; S.cancel=false; updateUI();
+  if(!S.sharp || S.sharp.length!==src.count) S.sharp=new Float32Array(src.count).fill(-1);
+  const sw=320, sh=Math.max(2,Math.round(320*src.H/src.W)), sc=document.createElement('canvas'); sc.width=sw; sc.height=sh;
+  const sctx=sc.getContext('2d',{willReadFrequently:true});
+  const span=S.outF-S.inF+1, step=Math.max(1,Math.ceil(span/240));
+  const list=[]; for(let i=S.inF;i<=S.outF;i+=step) list.push(i);
+  const score=async i=>{ await src.draw(i,sctx,sw,sh); S.sharp[i]=lapVar(sctx.getImageData(0,0,sw,sh).data,sw,sh); };
+  status('Scoring sharpness…');
+  for(let k=0;k<list.length;k++){
+    if(S.cancel) break;
+    await score(list[k]); progress((k+1)/(list.length+(step>1?step*2:0)));
+    if(k%8===0){ drawSharp(); await nextFrame(); }
+  }
+  let best=-1, max=-1; for(let i=S.inF;i<=S.outF;i++) if(S.sharp[i]>max){ max=S.sharp[i]; best=i; }
+  if(step>1 && best>=0 && !S.cancel){
+    for(let i=Math.max(S.inF,best-step+1);i<=Math.min(S.outF,best+step-1);i++){ if(S.cancel) break; if(S.sharp[i]<0) await score(i); }
+    for(let i=S.inF;i<=S.outF;i++) if(S.sharp[i]>max){ max=S.sharp[i]; best=i; }
+  }
+  const cancelled=S.cancel;
+  S.busy=false; progress(null); drawSharp();
+  if(best>=0){ goTo(best); status(`${cancelled?'Stopped early. Sharpest so far':'Sharpest frame in range'}: frame ${best+1}.${step>1?' Long range, so every '+step+'th frame was scored, then the area around the winner frame by frame.':''}`); }
+  else { updateUI(); status('Scoring stopped.'); }
+}
+$('#findBtn').onclick=findSharpest;
+
+/* ---------- stacking ---------- */
+function median(a,n){
+  let lo=0, hi=n-1; const k=n>>1;
+  while(lo<hi){ const pv=a[(lo+hi)>>1]; let i=lo, j=hi;
+    while(i<=j){ while(a[i]<pv) i++; while(a[j]>pv) j--; if(i<=j){ const t=a[i]; a[i]=a[j]; a[j]=t; i++; j--; } }
+    if(k<=j) hi=j; else if(k>=i) lo=i; else break; }
+  return a[k];
+}
+async function runStack(){
+  const src=S.src; if(!src) return;
+  const frames=stackFrames(), mode=modeVal();
+  if(frames.length<2){ status('Set a range with at least two frames to stack.'); return; }
+  await navIdle(); S.busy=true; S.cancel=false; updateUI();
+  let W=src.W, H=src.H;
+  if(mode==='median'){ const s=Math.min(1,1920/Math.max(W,H)); W=Math.round(W*s); H=Math.round(H*s); }
+  const N=W*H, wc=document.createElement('canvas'); wc.width=W; wc.height=H;
+  const wctx=wc.getContext('2d',{willReadFrequently:true});
+  const label={avg:'Long exposure',lighten:'Light trails',median:'Clean plate'}[mode];
+  status(`${label}: reading ${frames.length} frames…`);
+  try{
+    let acc=null; const stores=[];
+    if(mode==='avg') acc=new Uint32Array(N*3); else if(mode==='lighten') acc=new Uint8Array(N*3);
+    const phase=mode==='median'?0.55:1;
+    for(let k=0;k<frames.length;k++){
+      if(S.cancel) throw new Error('cancel');
+      await src.draw(frames[k],wctx,W,H);
+      const d=wctx.getImageData(0,0,W,H).data;
+      if(mode==='avg'){ for(let p=0,q=0;p<N;p++,q+=4){ const j=p*3; acc[j]+=d[q]; acc[j+1]+=d[q+1]; acc[j+2]+=d[q+2]; } }
+      else if(mode==='lighten'){ for(let p=0,q=0;p<N;p++,q+=4){ const j=p*3; if(d[q]>acc[j]) acc[j]=d[q]; if(d[q+1]>acc[j+1]) acc[j+1]=d[q+1]; if(d[q+2]>acc[j+2]) acc[j+2]=d[q+2]; } }
+      else { const rgb=new Uint8Array(N*3); for(let p=0,q=0;p<N;p++,q+=4){ const j=p*3; rgb[j]=d[q]; rgb[j+1]=d[q+1]; rgb[j+2]=d[q+2]; } stores.push(rgb); }
+      progress((k+1)/frames.length*phase); await nextFrame();
+    }
+    const out=new ImageData(W,H), o=out.data, n=frames.length;
+    if(mode==='avg'){ for(let p=0,q=0;p<N;p++,q+=4){ const j=p*3; o[q]=(acc[j]+n/2)/n; o[q+1]=(acc[j+1]+n/2)/n; o[q+2]=(acc[j+2]+n/2)/n; o[q+3]=255; } }
+    else if(mode==='lighten'){ for(let p=0,q=0;p<N;p++,q+=4){ const j=p*3; o[q]=acc[j]; o[q+1]=acc[j+1]; o[q+2]=acc[j+2]; o[q+3]=255; } }
+    else {
+      status('Clean plate: computing the median of each pixel…');
+      const tmp=new Uint8Array(n), m=stores.length, rows=Math.max(1,Math.floor(60000/W));
+      for(let y0=0;y0<H;y0+=rows){
+        if(S.cancel) throw new Error('cancel');
+        const y1=Math.min(H,y0+rows);
+        for(let p=y0*W;p<y1*W;p++){ const j=p*3, q=p*4;
+          for(let c=0;c<3;c++){ for(let f=0;f<m;f++) tmp[f]=stores[f][j+c]; o[q+c]=median(tmp,m); }
+          o[q+3]=255; }
+        progress(phase+(1-phase)*(y1/H)); await nextFrame();
+      }
+    }
+    resultCanvas.width=W; resultCanvas.height=H; rctx.putImageData(out,0,0);
+    S.result={mode,label,n,a:frames[0],b:frames[frames.length-1],W,H};
+    const w=String(src.count).length;
+    $('#resultMeta').textContent=`${label} · ${n} frames · F ${pad(S.result.a+1,w)}–${pad(S.result.b+1,w)} · ${W}×${H}`;
+    $('#resultPanel').hidden=false; $('#tabs').hidden=false; setView('result');
+    status(`Done. ${label} from ${n} frames. Switch between Frame and Result in the viewer.`);
+  }catch(e){
+    if(e.message==='cancel') status('Stacking cancelled.');
+    else if(e instanceof RangeError) status('Not enough memory for that many frames at this size. Shorten the range or use every 2nd or 3rd frame.');
+    else status('Stacking failed: '+e.message);
+  }
+  S.busy=false; progress(null); updateUI();
+  navTarget=S.cur; if(!navRunning) navLoop();
+}
+$('#stackBtn').onclick=runStack;
+
+/* ---------- saving ---------- */
+let modalUrl=null;
+function showFallback(blob){
+  if(modalUrl) URL.revokeObjectURL(modalUrl);
+  modalUrl=URL.createObjectURL(blob); $('#modalImg').src=modalUrl; $('#modal').hidden=false; $('#modalClose').focus();
+}
+$('#modalClose').onclick=()=>{ $('#modal').hidden=true; };
+async function saveCanvas(canvas,filename){
+  const blob=await new Promise(r=>canvas.toBlob(r,'image/png'));
+  if(!blob){ status('Could not encode the PNG.'); return; }
+  if(!dl){ showFallback(blob); return; }
+  try{ await dl.save({filename,data:blob}); toast('Saved '+filename); }
+  catch(e){
+    const c=e&&e.code;
+    if(c==='declined') toast('Save cancelled');
+    else if(c==='rate_limited') toast('A save prompt is already open');
+    else if(c==='too_large') status('That image is too large to save here.');
+    else showFallback(blob);
+  }
+}
+$('#saveFrameBtn').onclick=async()=>{
+  if(!S.src) return; await navIdle();
+  const w=String(S.src.count).length;
+  saveCanvas(frameCanvas,`${S.src.base}_frame${pad(S.cur+1,w)}.png`);
+};
+$('#saveResultBtn').onclick=()=>{
+  if(!S.result) return; const w=String(S.src.count).length, r=S.result;
+  const tag={avg:'longexposure',lighten:'lighttrails',median:'cleanplate'}[r.mode];
+  saveCanvas(resultCanvas,`${S.src.base}_${tag}_f${pad(r.a+1,w)}-${pad(r.b+1,w)}.png`);
+};
+
+/* ---------- resize ---------- */
+let rzT; new ResizeObserver(()=>{ clearTimeout(rzT); rzT=setTimeout(async()=>{ if(!S.src||S.busy) return; S.busy=true; updateUI(); await buildThumbs(); S.busy=false; updateUI(); },300); }).observe($('#strip'));
+
+useSource(makeSample());
+</script>
+
+</body></html>

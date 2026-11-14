@@ -245,7 +245,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <div class="stats band" aria-label="At a glance">
   <div class="wrap">
-    <div class="stat"><b>05</b><span>Apps shipped</span></div>
+    <div class="stat"><b>06</b><span>Apps shipped</span></div>
     <div class="stat"><b>03</b><span>Languages · EN HI TE</span></div>
     <div class="stat"><b>75</b><span>Video looks to pick from</span></div>
     <div class="stat"><b>01</b><span>Person, brief to handover</span></div>
@@ -306,7 +306,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
           <figure class="portrait"><img src="frankie.jpg" alt="Frankie in a navy kurta, arms crossed, in front of a carved green wall" width="480" height="600" loading="lazy"></figure>
           <div>
             <p>By day I'm a senior technical writer, turning complicated products into instructions people can follow. That habit runs through everything I make: clear structure, plain words, and handover notes so you're never stuck.</p>
-            <p>The rest of the time I design and build websites, AI-made ads and reels. Five of my own apps are live and in use, from a songwriting studio to a photo-contest tracker.</p>
+            <p>The rest of the time I design and build websites, AI-made ads and reels. Six of my own apps are live and in use, from a songwriting studio to a photo-contest tracker.</p>
             <ul class="facts"><li>Websites · ads · reels</li><li>English · Hindi · Telugu</li><li>Documented handover</li><li>Shoots on Fujifilm</li></ul>
           </div>
         </div>
@@ -356,6 +356,7 @@ const APPS=[
  {id:"darkroom",name:"Caption Darkroom",tag:"AI tool · Creators",desc:"Add a photo or video and get captions, hashtags, keywords and the best time to post on each platform.",url:"https://caption-darkroom.franklin160371.workers.dev",act:"Open app",gx:6,gy:0,h:2.6,c:["#3e5486","#2b3c66","#6e86b8"]},
  {id:"anchorlist",name:"Anchorlist",tag:"Music · Listeners",desc:"Paste one song and get a playlist that stays in its genre and language, ready for Spotify or YouTube Music.",url:"https://anchorlist.franklin160371.workers.dev",act:"Open app",gx:0,gy:3,h:2.2,c:["#e9dcc0","#c9b78f","#faf2de"]},
  {id:"truecrop",name:"Truecrop",tag:"Image tool · Photographers",desc:"Crops and resizes images for social posts and contest entries without losing quality.",url:"https://truecrop.franklin160371.workers.dev",act:"Open app",gx:6,gy:3,h:1.8,c:["#e8b23a","#c8921f","#f6d27a"]},
+ {id:"framestack",name:"Framestack",tag:"Video tool · Photographers",desc:"Step through a video frame by frame, grab the sharpest frame, or blend a range into one long-exposure, light-trail or clean-plate photo. Runs in the browser; nothing is uploaded.",url:"https://frank7839.github.io/framestack/",act:"Open app",gx:0,gy:6,h:2.4,c:["#23879b","#1a6675","#5fb3c3"]},
  {id:"you",name:"Your project",tag:"Open plot",desc:"This plot is free. Tell me what you want built and it could stand here next.",url:"https://forms.gle/uVM62EsfMTJfGq5U7",act:"Fill in the brief",gx:3,gy:6,h:0,c:[]}
 ];
 
@@ -386,7 +387,7 @@ box(svg,-1,-1,-.6,10,10,.6,["#2b3c66","#131f38","#1f2e52"]);
 [[-1,2.5,9,2.5],[-1,5.5,9,5.5]].forEach(([x1,y1,x2,y2])=>{const a=P(x1,y1,0),b=P(x2,y2,0);el("line",{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:"#e8b23a","stroke-width":1,"stroke-dasharray":"4 6",opacity:.6})});
 
 /* draw order: by plot depth */
-const plots=[...APPS.map(a=>({type:"app",a,k:a.gx+a.gy})),{type:"char",k:6},{type:"park",gx:0,gy:6,k:6.1},{type:"park",gx:6,gy:6,k:12}];
+const plots=[...APPS.map(a=>({type:"app",a,k:a.gx+a.gy})),{type:"char",k:6},{type:"park",gx:6,gy:6,k:12}];
 plots.sort((p,q)=>p.k-q.k);
 const groups={},ORDER=[];
 plots.forEach(p=>{
@@ -552,7 +553,7 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
       else if(ri)jobs.push(put(C((j===0||j===7)&&i===2?"road-straight-lightposts":"road-straight"),x,0,z,1,1,0));
       else if(rj)jobs.push(put(C((i===0||i===7)&&j===5?"road-straight-lightposts":"road-straight"),x,0,z,1,1,Math.PI/2));
       else{
-        const park=(i<2&&j>5)||(i>5&&j>5);
+        const park=i>5&&j>5;
         jobs.push(put(C(park?((i+j)%2?"grass-trees-tall":"grass-trees"):"pavement"),x,0,z,1));
       }
     }
@@ -560,7 +561,7 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
     /* app buildings */
     const spec={
       chordsmith:{m:"building-small-a",n:3},radar:{m:"building-small-b",n:1},darkroom:{m:"building-small-c",n:1},
-      anchorlist:{m:"building-small-d",n:1},truecrop:{m:"building-garage",n:1}
+      anchorlist:{m:"building-small-d",n:1},truecrop:{m:"building-garage",n:1},framestack:{m:"building-small-c",n:2}
     };
     for(const a of APPS){
       const g=new THREE.Group(),cx=plotC(a.gx),cz=plotC(a.gy);g.position.set(cx,0,cz);g.userData.id=a.id;
