@@ -28,7 +28,7 @@
 /* Layout: Swiss 12-column grid, flush-left type. Navy silkscreen bands (hero, stats, process) alternate with calm cream reading sections. One isometric city in the hero. Single deliberate look. */
 :root{
   --navy:#1b2a4a; --navy-deep:#131f38; --mustard:#e8b23a; --cream:#f3ead8; --paper:#faf5ea;
-  --red:#d6452f; --ink:#16203a; --slate:#6f7a92; --line:rgba(22,32,58,.16); --line-n:rgba(243,234,216,.18);
+  --red:#d6452f; --ink:#16203a; --slate:#586381; --line:rgba(22,32,58,.16); --line-n:rgba(243,234,216,.18);
   --f-display:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
   --f-poster:"Big Shoulders Display","Arial Narrow","Helvetica Neue",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -59,7 +59,17 @@ a{color:inherit}
 .nav ul{list-style:none;margin:0;padding:0;display:flex;gap:22px}
 .nav ul a{text-decoration:none;font-size:var(--s1);opacity:.8}
 .nav ul a:hover{opacity:1}
-@media (max-width:600px){.nav ul li:not(:last-child){display:none}}
+.nav ul{align-items:center}
+.nav ul a{display:inline-block;padding:8px 0;transition:opacity .15s ease}
+.nav ul a[aria-current="true"]{opacity:1;box-shadow:inset 0 -2px 0 var(--mustard)}
+.nav ul li:last-child a{background:var(--mustard);color:var(--navy-deep);opacity:1;padding:8px 14px;font-weight:700;box-shadow:none}
+.nav ul li:last-child a:hover{background:var(--cream)}
+@media (max-width:700px){
+  .nav ul{flex:1;min-width:0;gap:16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .nav ul::-webkit-scrollbar{display:none}
+  .nav ul li:first-child{margin-left:auto}
+  .nav ul li:last-child{display:none}
+}
 
 /* hero */
 .hero .wrap{padding-block:56px 40px}
@@ -200,8 +210,47 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 .rot{position:absolute;right:0;bottom:4px;display:flex;gap:6px}
 .rot button{width:34px;height:34px;border:1px solid var(--line-n);background:rgba(19,31,56,.6);color:var(--cream);font-size:16px;cursor:pointer}
 .rot button:hover{background:var(--mustard);color:var(--navy-deep)}
+
+/* ---------- polish pass ---------- */
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+.skip{position:absolute;left:-999px;top:0;z-index:20;background:var(--mustard);color:var(--navy-deep);padding:10px 14px;font-weight:700;text-decoration:none}
+.skip:focus{left:8px;top:calc(env(safe-area-inset-top,0px) + 8px)}
+.btn{transition:transform .15s ease,box-shadow .15s ease,background .15s ease,color .15s ease}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--red)}
+.btn:active{transform:none;box-shadow:none}
+.assure{flex-basis:100%;margin:6px 0 0;font-family:var(--f-mono);font-size:.72rem;letter-spacing:.06em;opacity:.78}
+.work li{transition:background .2s ease,opacity .5s ease,transform .5s ease}
+.work li:not(.feat){padding-inline:12px;margin-inline:-12px}
+.work li:not(.feat):hover{background:var(--cream)}
+.process-note{max-width:34em;margin:0;opacity:.85}
+.faq details{border-top:2px solid var(--ink)}
+.faq details:last-child{border-bottom:2px solid var(--ink)}
+.faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 0;font-weight:800;font-variation-settings:"wdth" 110;font-size:var(--s3);line-height:1.2}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--f-poster);font-weight:900;font-size:1.8rem;line-height:1;color:var(--red);flex:none}
+.faq details[open] summary::after{content:"\2013"}
+.faq details p{margin:0 0 20px;max-width:38em}
+footer .foot-links{display:flex;gap:16px;flex-wrap:wrap}
+footer .foot-links a{text-decoration:none;border-bottom:1px solid var(--line-n)}
+footer .foot-links a:hover{border-bottom-color:var(--mustard);color:var(--mustard)}
+.rv{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.rv.in{opacity:1;transform:none}
+.dock{display:none}
+@media (max-width:700px){
+  .hero .wrap{padding-block:36px 28px}
+  section.sec{padding-block:60px}
+  .process .wrap{padding-block:60px}
+  footer.band .wrap{padding-bottom:96px}
+  .chips button{padding:9px 12px}
+  .dock{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:6;padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));background:var(--navy-deep);border-top:1px solid var(--line-n);transform:translateY(110%);visibility:hidden;transition:transform .25s ease,visibility .25s}
+  .dock.on{transform:none;visibility:visible}
+  .dock a{display:flex;justify-content:center;align-items:center;min-height:44px;font-weight:700;text-decoration:none;border:2px solid var(--mustard)}
+  .dock a.q{background:var(--mustard);color:var(--navy-deep)}
+  .dock a.w{color:var(--cream)}
+}
 </style>
 
+<a class="skip" href="#services">Skip to content</a>
 <nav class="nav" aria-label="Main">
   <div class="wrap">
     <a class="brand" href="#top"><i aria-hidden="true"></i>FRANKIE</a>
@@ -211,6 +260,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
       <li><a href="docs.html">Docs</a></li>
       <li><a href="#about">About</a></li>
       <li><a href="#process">Process</a></li>
+      <li><a href="#faq">FAQ</a></li>
       <li><a href="#contact">Get a quote</a></li>
     </ul>
   </div>
@@ -226,6 +276,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
         <div class="ctas">
           <a class="btn solid" href="https://forms.gle/uVM62EsfMTJfGq5U7" target="_blank" rel="noopener">Get a quote ↗</a>
           <a class="btn line" href="#work">See the work</a>
+          <p class="assure">Quoted on scope · You approve every step · Yours to keep</p>
         </div>
       </div>
       <div class="hero-city city">
@@ -318,6 +369,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <div class="wrap">
       <div class="label">Process</div>
       <h2>How a project runs.</h2>
+      <p class="process-note">You approve each step before the next one starts, so nothing gets built on a wrong guess.</p>
       <ol class="steps">
         <li><h3>Brief</h3><p>A short call or chat: what you need, who it's for, where it will live.</p></li>
         <li><h3>Look</h3><p>You pick a style from real previews before anything is designed.</p></li>
@@ -326,6 +378,24 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
       </ol>
     </div>
   </div>
+
+  <section class="sec" id="faq" style="padding-bottom:0">
+    <div class="wrap grid12">
+      <div class="sec-head">
+        <div class="label">FAQ</div>
+        <h2>Good to know.</h2>
+        <p>What people ask before they send a brief.</p>
+      </div>
+      <div class="sec-body faq">
+        <details open><summary>What will it cost?</summary><p>Every project is quoted on its scope, and I keep my rates starter-friendly. You see the full price before any work begins.</p></details>
+        <details><summary>Who owns the finished work?</summary><p>You do. The site, the files and the source are yours to keep.</p></details>
+        <details><summary>Can I update it myself afterwards?</summary><p>Yes. Every project comes with plain-language handover notes that show how to change the text, images and links. That's the technical writer in me.</p></details>
+        <details><summary>Do I get a say along the way?</summary><p>At every step. You pick the look from real previews and sign off the plan, and only then does the build start.</p></details>
+        <details><summary>Which languages do you work in?</summary><p>English, Hindi and Telugu, for voiceovers, captions and site copy.</p></details>
+        <details><summary>What do you need from me to start?</summary><p>Just the brief: seven questions, about two minutes. If you already have a logo, photos or text, send them along. If not, we work that out together.</p></details>
+      </div>
+    </div>
+  </section>
 
   <section class="sec" id="contact">
     <div class="wrap grid12">
@@ -338,18 +408,18 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
         <a class="btn solid" href="https://forms.gle/uVM62EsfMTJfGq5U7" target="_blank" rel="noopener" style="margin-bottom:20px">Fill in the brief ↗</a>
         <p class="fine" style="margin:0 0 24px">Seven questions, about two minutes. Opens a Google Form.</p>
         <div class="rows" id="rows"></div>
-        <p class="fine">No public rates. Every quote is written for your project.</p>
+        <p class="fine">Starter-friendly rates. Every quote is written for your project.</p>
       </div>
     </div>
   </section>
 </main>
 
-<footer class="band"><div class="wrap"><span>© 2026 Frankie · 3D models by Kenney (CC0)</span><span>17.3616° N · 78.4747° E · Hyderabad</span></div></footer>
+<footer class="band"><div class="wrap"><span>© 2026 Frankie · 3D models by Kenney (CC0)</span><span class="foot-links"><a href="#work">Work</a><a href="#faq">FAQ</a><a href="https://forms.gle/uVM62EsfMTJfGq5U7" target="_blank" rel="noopener">Brief ↗</a><a href="#top">Top ↑</a></span><span>17.3616° N · 78.4747° E · Hyderabad</span></div></footer>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "380d8ec8229c44fc918be1dd9be1859b"}'></script>
 
 <script>
 /* ---------- content ---------- */
-const CONTACT=[{k:"WhatsApp",v:"+91 80193 11553",href:"https://wa.me/918019311553"}];
+const CONTACT=[{k:"WhatsApp",v:"+91 80193 11553",href:"https://wa.me/918019311553?text=Hi%20Frankie%2C%20I%20have%20a%20project%20in%20mind."}];
 const APPS=[
  {id:"chordsmith",name:"Chordsmith",tag:"Web app · Musicians",desc:"A free songwriting studio for chords, progressions, lyrics and instrument shapes. Songs in English, Hindi or Telugu, and it installs like a phone app.",url:"https://frank7839.github.io/chordsmith",act:"Open app",feat:true,gx:0,gy:0,h:4.4,c:["#e8b23a","#c8921f","#f6d27a"]},
  {id:"radar",name:"Photo Contest Radar",tag:"Tracker · Photographers",desc:"Finds open photography competitions worldwide, with a country filter and each contest's rules in a fold-out panel.",url:"https://photo-contest-radar.franklin160371.workers.dev",act:"Open app",gx:3,gy:0,h:3.2,c:["#d6452f","#a9321f","#ee7a62"]},
@@ -493,7 +563,7 @@ select("chordsmith");
 const wl=document.getElementById("worklist");
 APPS.filter(a=>a.id!=="you").forEach(a=>{
   const li=document.createElement("li");if(a.feat)li.className="feat";
-  const left=document.createElement("div");left.style.minWidth="0";left.innerHTML='<div class="tag"></div><h3></h3>';left.querySelector(".tag").textContent=a.tag;left.querySelector("h3").textContent=a.name;
+  const left=document.createElement("div");left.style.minWidth="0";left.innerHTML='<div class="tag"></div><h3></h3>';left.querySelector(".tag").textContent=String(APPS.indexOf(a)+1).padStart(2,"0")+" · "+a.tag;left.querySelector("h3").textContent=a.name;
   const act=document.createElement("div");act.className="act";
   if(a.url){const l=document.createElement("a");l.href=a.url;l.target="_blank";l.rel="noopener";l.textContent=a.act+" ↗";act.append(l)}else{const s=document.createElement("span");s.textContent=a.act;act.append(s)}
   const p=document.createElement("p");p.textContent=a.desc;
@@ -508,6 +578,34 @@ CONTACT.forEach((c,i)=>{const r=document.createElement("div");r.className="row";
   r.querySelector(".k").textContent=c.k;const v=r.querySelector(".v");v.textContent=c.v;const b=r.querySelector("button");
   b.addEventListener("click",()=>{const ok=()=>{b.textContent="Copied";setTimeout(()=>b.textContent="Copy",1500)},sel=()=>{const s=getSelection(),g=document.createRange();g.selectNodeContents(v);s.removeAllRanges();s.addRange(g);b.textContent="Selected";setTimeout(()=>b.textContent="Copy",1500)};try{navigator.clipboard.writeText(c.v).then(ok,sel)}catch(e){sel()}});
   rows.append(r)});
+</script>
+<div class="dock" id="dock"><a class="q" href="https://forms.gle/uVM62EsfMTJfGq5U7" target="_blank" rel="noopener">Get a quote ↗</a><a class="w" href="https://wa.me/918019311553?text=Hi%20Frankie%2C%20I%20have%20a%20project%20in%20mind." target="_blank" rel="noopener">WhatsApp ↗</a></div>
+<script>
+/* ---------- polish: active nav link, scroll reveal, mobile quote dock ---------- */
+(()=>{
+  if(!("IntersectionObserver" in window))return;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const links=[...document.querySelectorAll('.nav ul a[href^="#"]')],byId={};
+  links.forEach(a=>{byId[a.getAttribute("href").slice(1)]=a});
+  const spy=new IntersectionObserver(es=>{es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    links.forEach(a=>a.removeAttribute("aria-current"));
+    const a=byId[e.target.id];if(a&&e.target.id!=="contact")a.setAttribute("aria-current","true");
+  })},{rootMargin:"-45% 0px -50% 0px"});
+  Object.keys(byId).forEach(id=>{const s=document.getElementById(id);if(s)spy.observe(s)});
+  if(!reduce){
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{rootMargin:"0px 0px -8% 0px"});
+    document.querySelectorAll(".service,.work li,.steps li,.faq details,.about").forEach(n=>{n.classList.add("rv");io.observe(n)});
+    /* failsafe: never leave content hidden if the observer does not fire */
+    setTimeout(()=>document.querySelectorAll(".rv:not(.in)").forEach(n=>{if(n.getBoundingClientRect().top<innerHeight)n.classList.add("in")}),1200);
+  }
+  const dock=document.getElementById("dock"),hero=document.getElementById("top"),contact=document.getElementById("contact");
+  if(dock&&hero&&contact){
+    let pastHero=false,atContact=false;const set=()=>dock.classList.toggle("on",pastHero&&!atContact);
+    new IntersectionObserver(e=>{pastHero=!e[0].isIntersecting;set()}).observe(hero);
+    new IntersectionObserver(e=>{atContact=e[0].isIntersecting;set()}).observe(contact);
+  }
+})();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
